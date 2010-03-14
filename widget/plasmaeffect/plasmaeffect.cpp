@@ -240,7 +240,7 @@ void PlasmaEffect::keyPressEvent(QKeyEvent *event)
 void PlasmaEffect::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
-    painter.drawImage(QPoint(0, 0), m_image);
+    painter.drawImage(QPointF(), m_image);
 }
 
 void PlasmaEffect::resizeEvent(QResizeEvent *event)
