@@ -289,11 +289,9 @@ void PlasmaEffect::setUp()
     for (int x = 0; x < maxDimension; ++x)
         f[x] = qRound(m_alpha * m_baseFunction(x * m_alphaAdjust) + m_beta * cos(x * m_betaAdjust));
 
-    QRgb rgb;
     int r = m_redComponent, g = m_greenComponent, b = m_blueComponent;
     for (int i = 0; i < 128; ++i) {
-        rgb = QColor(r, g, b).rgb();
-        m_palette[i] = m_palette[255-i] = rgb;
+        m_palette[i] = m_palette[255-i] = qRgb(r, g, b);
         r += m_redComponentChangeFactor;
         g += m_greenComponentChangeFactor;
         b += m_blueComponentChangeFactor;
