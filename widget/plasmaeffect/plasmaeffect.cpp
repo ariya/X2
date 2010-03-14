@@ -312,7 +312,12 @@ int main(int argc, char *argv[])
     PlasmaEffect plasma(640, 360);
     plasma.setInterval(35);
     plasma.start();
+#ifdef Q_OS_SYMBIAN
+    plasma.showMaximized(); // http://bugreports.qt.nokia.com/browse/QTBUG-8190
+#else
     plasma.show();
+#endif
+
     return application.exec();
 }
 
