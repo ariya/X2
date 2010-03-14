@@ -248,6 +248,7 @@ void PlasmaEffect::resizeEvent(QResizeEvent *event)
     m_plasmaWidth = event->size().width();
     m_plasmaHeight = event->size().height();
     m_image = QImage(m_plasmaWidth, m_plasmaHeight, QImage::Format_Indexed8);
+    m_image.setColorTable(m_palette);
     if (m_pattern)
         delete m_pattern;
     m_pattern = new int[m_plasmaWidth*m_plasmaHeight];
