@@ -282,9 +282,10 @@ void PlasmaEffect::paintNextFrame()
 
 void PlasmaEffect::setUp()
 {
-    int *f = new int[qMax(m_plasmaWidth, m_plasmaHeight)];
+    int maxDimension = qMax(m_plasmaWidth, m_plasmaHeight);
+    int *f = new int[maxDimension];
 
-    for (int x = 0; x < m_plasmaWidth; ++x)
+    for (int x = 0; x < maxDimension; ++x)
         f[x] = qRound(m_alpha * m_baseFunction(x * m_alphaAdjust) + m_beta * cos(x * m_betaAdjust));
 
     QRgb rgb;
