@@ -26,18 +26,18 @@ class PlasmaEffect : public QWidget
 
 public:
     typedef double (*transformation)(double);
-    PlasmaEffect(int width, int height, QWidget *parent = 0);
+    enum BaseColor { Red, Green, Blue };
+    PlasmaEffect(int width = 640, int height = 360, QWidget *parent = 0);
     int interval() const;
 
 public slots:
-    void setRedAsBase();
-    void setGreenAsBase();
-    void setBlueAsBase();
+    void setBaseColor(BaseColor color);
     void setParameters(qreal alpha, qreal alphaAdjust, qreal beta, qreal betaAdjust);
     void setBaseFunction(transformation function);
     void start();
     void stop();
     void setInterval(int msec);
+    void toggleAnimation();
     void toggleFullScreen();
 
 protected:
@@ -77,10 +77,9 @@ private:
 };
 
 PlasmaEffect::PlasmaEffect(int width, int height, QWidget *parent) : QWidget(parent),
-    m_fullScreen(false),
+    m_plasmaWidth(width), m_plasmaHeight(height), m_fullScreen(false),
     m_pattern(0), m_palette(256),
-    m_timerInterval(40),
-    m_baseFunction(sin),
+    m_timerInterval(40), m_baseFunction(sin),
     m_alpha(20), m_alphaAdjust(0.15), m_beta(100), m_betaAdjust(0.015),
     m_redComponent(0), m_greenComponent(255), m_blueComponent(0),
     m_redComponentChangeFactor(2), m_greenComponentChangeFactor(-2),
@@ -91,7 +90,6 @@ PlasmaEffect::PlasmaEffect(int width, int height, QWidget *parent) : QWidget(par
     setAttribute(Qt::WA_NoSystemBackground, true);
 
     resize(width, height);
-    start();
 }
 
 int PlasmaEffect::interval() const
@@ -99,27 +97,21 @@ int PlasmaEffect::interval() const
     return m_timerInterval;
 }
 
-void PlasmaEffect::setRedAsBase()
+void PlasmaEffect::setBaseColor(BaseColor color)
 {
-    m_redComponent = 255; m_redComponentChangeFactor = -2;
-    m_greenComponent = 0; m_greenComponentChangeFactor = 2;
-    m_blueComponent = 0; m_blueComponentChangeFactor = 2;
-    setUp();
-}
-
-void PlasmaEffect::setGreenAsBase()
-{
-    m_redComponent = 0; m_redComponentChangeFactor = 2;
-    m_greenComponent = 255; m_greenComponentChangeFactor = -2;
-    m_blueComponent = 0; m_blueComponentChangeFactor = 2;
-    setUp();
-}
-
-void PlasmaEffect::setBlueAsBase()
-{
-    m_redComponent = 0; m_redComponentChangeFactor = 2;
-    m_greenComponent = 0; m_greenComponentChangeFactor = 2;
-    m_blueComponent = 255; m_blueComponentChangeFactor = -2;
+    if (color == Red) {
+        m_redComponent   = 255; m_redComponentChangeFactor   = -2;
+        m_greenComponent = 0;   m_greenComponentChangeFactor = 2;
+        m_blueComponent  = 0;   m_blueComponentChangeFactor  = 2;
+    } else if (color == Green) {
+        m_redComponent   = 0;   m_redComponentChangeFactor   = 2;
+        m_greenComponent = 255; m_greenComponentChangeFactor = -2;
+        m_blueComponent  = 0;   m_blueComponentChangeFactor  = 2;
+    } else {
+        m_redComponent   = 0;   m_redComponentChangeFactor   = 2;
+        m_greenComponent = 0;   m_greenComponentChangeFactor = 2;
+        m_blueComponent  = 255; m_blueComponentChangeFactor  = -2;
+    }
     setUp();
 }
 
@@ -138,19 +130,32 @@ void PlasmaEffect::setBaseFunction(transformation function)
 
 void PlasmaEffect::start()
 {
-    m_animationTimer.start(m_timerInterval, this);
+    if (!m_animationTimer.isActive())
+        m_animationTimer.start(interval(), this);
 }
 
 void PlasmaEffect::stop()
 {
-    m_animationTimer.stop();
+    if (m_animationTimer.isActive())
+        m_animationTimer.stop();
 }
 
 void PlasmaEffect::setInterval(int msec)
 {
-    m_animationTimer.stop();
+    if (msec > 250 || msec < 10)
+        return;
+    if (m_animationTimer.isActive())
+        m_animationTimer.stop();
     m_timerInterval = msec;
     m_animationTimer.start(msec, this);
+}
+
+void PlasmaEffect::toggleAnimation()
+{
+    if (m_animationTimer.isActive())
+        m_animationTimer.stop();
+    else
+        m_animationTimer.start(interval(), this);
 }
 
 void PlasmaEffect::toggleFullScreen()
@@ -198,31 +203,18 @@ void PlasmaEffect::keyPressEvent(QKeyEvent *event)
         setUp();
         break;
 
-    case Qt::Key_R: setRedAsBase(); break;
-    case Qt::Key_G: setGreenAsBase(); break;
-    case Qt::Key_B: setBlueAsBase(); break;
+    case Qt::Key_R: setBaseColor(Red); break;
+    case Qt::Key_G: setBaseColor(Green); break;
+    case Qt::Key_B: setBaseColor(Blue); break;
 
     case Qt::Key_S: setBaseFunction(sin); break;
     case Qt::Key_T: setBaseFunction(tan); break;
 
-    case Qt::Key_F:
-        toggleFullScreen();
-        break;
+    case Qt::Key_F: toggleFullScreen(); break;
+    case Qt::Key_Space: toggleAnimation(); break;
 
-    case Qt::Key_Space:
-        if (m_animationTimer.isActive())
-            stop();
-        else
-            start();
-        break;
-    case Qt::Key_O:
-        if (!(m_timerInterval > 250))
-            setInterval(interval() + 5);
-        break;
-    case Qt::Key_P:
-        if (!(m_timerInterval < 10))
-            setInterval(interval() - 5);
-        break;
+    case Qt::Key_O: setInterval(interval() + 5); break;
+    case Qt::Key_P: setInterval(interval() - 5); break;
 
     case Qt::Key_1: setParameters(0, -0.046, -4, 0.0086); break;
     case Qt::Key_2: setParameters(-16, -0.012, 4, -0.0266); break;
@@ -235,12 +227,8 @@ void PlasmaEffect::keyPressEvent(QKeyEvent *event)
     case Qt::Key_9: setParameters(-38, 0.002, 12, -0.0662); break;
     case Qt::Key_0: setParameters(20, 0.15, 100, 0.015); break;
 
-    case Qt::Key_Escape:
-        QApplication::quit();
-        break;
-
-    default:
-        QWidget::keyPressEvent(event);
+    case Qt::Key_Escape: QApplication::quit(); break;
+    default: QWidget::keyPressEvent(event);
     }
 }
 
@@ -319,14 +307,13 @@ void PlasmaEffect::setUp()
 int main(int argc, char *argv[])
 {
     QApplication application(argc, argv);
-    PlasmaEffect plasma(640, 360);
-    plasma.setInterval(35);
-    plasma.start();
+    PlasmaEffect plasma;
 #ifdef Q_OS_SYMBIAN
     plasma.showMaximized(); // http://bugreports.qt.nokia.com/browse/QTBUG-8190
 #else
     plasma.show();
 #endif
+    plasma.start();
 
     return application.exec();
 }
