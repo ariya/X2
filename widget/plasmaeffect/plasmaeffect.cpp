@@ -38,9 +38,11 @@ public slots:
     void start();
     void stop();
     void setInterval(int msec);
+    void toggleFullScreen();
 
 protected:
     virtual void keyPressEvent(QKeyEvent *event);
+    virtual void mousePressEvent(QMouseEvent *event);
     virtual void paintEvent(QPaintEvent *);
     virtual void resizeEvent(QResizeEvent *event);
     virtual void timerEvent(QTimerEvent *event);
@@ -151,6 +153,17 @@ void PlasmaEffect::setInterval(int msec)
     m_animationTimer.start(msec, this);
 }
 
+void PlasmaEffect::toggleFullScreen()
+{
+    if (m_fullScreen) {
+        showNormal();
+        m_fullScreen = false;
+    } else {
+        showFullScreen();
+        m_fullScreen = true;
+    }
+}
+
 void PlasmaEffect::keyPressEvent(QKeyEvent *event)
 {
     switch (event->key()) {
@@ -193,13 +206,7 @@ void PlasmaEffect::keyPressEvent(QKeyEvent *event)
     case Qt::Key_T: setBaseFunction(tan); break;
 
     case Qt::Key_F:
-        if (m_fullScreen) {
-            showNormal();
-            m_fullScreen = false;
-        } else {
-            showFullScreen();
-            m_fullScreen = true;
-        }
+        toggleFullScreen();
         break;
 
     case Qt::Key_Space:
@@ -235,6 +242,11 @@ void PlasmaEffect::keyPressEvent(QKeyEvent *event)
     default:
         QWidget::keyPressEvent(event);
     }
+}
+
+void PlasmaEffect::mousePressEvent(QMouseEvent *)
+{
+    toggleFullScreen();
 }
 
 void PlasmaEffect::paintEvent(QPaintEvent *)
