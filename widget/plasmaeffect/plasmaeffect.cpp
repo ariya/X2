@@ -53,6 +53,7 @@ private:
     bool m_fullScreen;
 
     QImage m_image;
+    QRgb *m_bits;
     int *m_pattern;
     QVector<QRgb> m_palette;
     int m_timerInterval;
@@ -78,7 +79,7 @@ private:
 
 PlasmaEffect::PlasmaEffect(int width, int height, QWidget *parent) : QWidget(parent),
     m_plasmaWidth(width), m_plasmaHeight(height), m_fullScreen(false),
-    m_pattern(0), m_palette(256),
+    m_bits(0), m_pattern(0), m_palette(256),
     m_timerInterval(40), m_baseFunction(sin),
     m_alpha(20), m_alphaAdjust(0.15), m_beta(100), m_betaAdjust(0.015),
     m_redComponent(0), m_greenComponent(255), m_blueComponent(0),
@@ -247,8 +248,9 @@ void PlasmaEffect::resizeEvent(QResizeEvent *event)
 {
     m_plasmaWidth = event->size().width();
     m_plasmaHeight = event->size().height();
-    m_image = QImage(m_plasmaWidth, m_plasmaHeight, QImage::Format_Indexed8);
-    m_image.setColorTable(m_palette);
+    m_image = QImage(m_plasmaWidth, m_plasmaHeight, QImage::Format_RGB32);
+    m_bits = (QRgb*)m_image.bits();
+
     if (m_pattern)
         delete m_pattern;
     m_pattern = new int[m_plasmaWidth*m_plasmaHeight];
@@ -270,14 +272,13 @@ void PlasmaEffect::paintNextFrame()
         m_palette[i] = m_palette[i + 1];
     m_palette[255] = m_palette[0];
 
-    uchar *scanLine;
-    for (int line = 0; line < m_plasmaHeight; ++line) {
-        scanLine = m_image.scanLine(line);
-        for (int offset = 0; offset < m_plasmaWidth; ++offset)
-    	scanLine[offset] = m_palette[m_pattern[line * m_plasmaWidth + offset]];
-    }
+    int p;
+    for (int y = 0; y < m_plasmaHeight; ++y)
+        for (int x = 0; x < m_plasmaWidth; ++x) {
+            p = y * m_plasmaWidth + x;
+            m_bits[p] = m_palette[m_pattern[p]];
+        }
 
-    m_image.setColorTable(m_palette);
     update();
 }
 
