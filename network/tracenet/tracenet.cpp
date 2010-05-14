@@ -115,7 +115,7 @@ private slots:
             std::cout << "\"identifier\":" << m_replyHash[reply] << ",";
             std::cout << "\"statusCode\":\"" << statusCode << "\",";
             std::cout << "\"expectedContentLength\": " << contentLength << ",";
-            std::cout << "\"mimeType\":\"text/html\"},";
+            std::cout << "\"mimeType\":\"" << qPrintable(mimeType) << "\"},";
             std::cout << "\"time\":" << m_ticker.elapsed() << ",";
             std::cout << "\"sequence\":" << m_sequence++;
             std::cout << "}" << std::endl;
