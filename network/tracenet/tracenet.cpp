@@ -23,28 +23,20 @@
 
 #include <iostream>
 
-#if QT_VERSION < QT_VERSION_CHECK(4, 7, 0)
-int qHash(const QUrl &url)
-{
-    return qHash(url.toString());
-}
-#endif
-
 class Tracker: public QNetworkAccessManager
 {
     Q_OBJECT
 
 private:
-    int m_urlCounter;
-    QHash<QUrl, int> m_urlHash;
-    QSet<QUrl> m_startedUrls;
+    int m_replyCounter;
+    QHash<QNetworkReply*, int> m_replyHash;
     QTime m_ticker;
     int m_sequence;
 
 public:
     Tracker(QObject *parent = 0)
         : QNetworkAccessManager(parent)
-        , m_urlCounter(1)
+        , m_replyCounter(1)
         , m_sequence(1) {
         m_ticker.start();
         std::cout << "<html isdump=true>" << std::endl;
@@ -90,13 +82,14 @@ protected:
         QNetworkReply *reply = QNetworkAccessManager::createRequest(op, request, outgoingData);
         std::cout << "{\"type\":12,";
         std::cout << "\"data\":{";
-        std::cout << "\"identifier\":" << findUrl(reply->url()) << ",";
+        std::cout << "\"identifier\":" << m_replyCounter << ",";
         std::cout << "\"url\": \"" << qPrintable(reply->url().toString()) << "\",";
         std::cout << "\"requestMethod\":\"" << toString(op) << "\",";
         std::cout << "\"isMainResource\": false},";
         std::cout << "\"time\":" << m_ticker.elapsed() << ",";
         std::cout << "\"sequence\":" << m_sequence++;
         std::cout << "}" << std::endl;
+        m_replyHash[reply] = m_replyCounter++;
         connect(reply, SIGNAL(readyRead()), this, SLOT(startReply()));
         connect(reply, SIGNAL(finished()), this, SLOT(finishReply()));
         return reply;
@@ -116,11 +109,10 @@ private slots:
         int contentLength = reply->header(QNetworkRequest::ContentLengthHeader).toInt();
         QString mimeType = reply->header(QNetworkRequest::ContentTypeHeader).toString();
         int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-        if (!m_startedUrls.contains(reply->url())) {
-            m_startedUrls += reply->url();
+        if (m_replyHash.contains(reply)) {
             std::cout << "{\"type\":13,";
             std::cout << "\"data\":{";
-            std::cout << "\"identifier\":" << findUrl(reply->url()) << ",";
+            std::cout << "\"identifier\":" << m_replyHash[reply] << ",";
             std::cout << "\"statusCode\":\"" << statusCode << "\",";
             std::cout << "\"expectedContentLength\": " << contentLength << ",";
             std::cout << "\"mimeType\":\"text/html\"},";
@@ -133,25 +125,16 @@ private slots:
     // NETWORK_RESOURCE_FINISH
     void finishReply() {
         QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
-        std::cout << "{\"type\":14,";
-        std::cout << "\"data\":{";
-        std::cout << "\"identifier\":" << findUrl(reply->url()) << ",";
-        std::cout << "\"didFail\": false},";
-        std::cout << "\"time\":" << m_ticker.elapsed() << ",";
-        std::cout << "\"sequence\":" << m_sequence++;
-        std::cout << "}" << std::endl;
-        m_startedUrls.remove(reply->url());
-    }
-
-private:
-    int findUrl(const QUrl &url) {
-        int idx = m_urlHash.value(url, 0);
-        if (idx <= 0) {
-            idx = m_urlCounter;
-            ++m_urlCounter;
-            m_urlHash[url] = idx;
+        if (m_replyHash.contains(reply)) {
+            std::cout << "{\"type\":14,";
+            std::cout << "\"data\":{";
+            std::cout << "\"identifier\":" << m_replyHash[reply] << ",";
+            std::cout << "\"didFail\": false},";
+            std::cout << "\"time\":" << m_ticker.elapsed() << ",";
+            std::cout << "\"sequence\":" << m_sequence++;
+            std::cout << "}" << std::endl;
+            m_replyHash.remove(reply);
         }
-        return idx;
     }
 };
 
