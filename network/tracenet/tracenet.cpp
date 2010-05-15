@@ -129,7 +129,11 @@ private slots:
             std::cout << "{\"type\":14,";
             std::cout << "\"data\":{";
             std::cout << "\"identifier\":" << m_replyHash[reply] << ",";
-            std::cout << "\"didFail\": false},";
+            std::cout << "\"didFail\":";
+            if (reply->error() == QNetworkReply::NoError)
+                std::cout << "false";
+            else
+                std::cout << "true";
             std::cout << "\"time\":" << m_ticker.elapsed() << ",";
             std::cout << "\"sequence\":" << m_sequence++;
             std::cout << "}" << std::endl;
