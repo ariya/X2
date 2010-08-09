@@ -18,22 +18,94 @@
 */
 
 #include <QtGui>
-#include <QtDBus>
 
-void getAcceleration(qreal &x, qreal &y, qreal &z)
+#ifdef Q_OS_LINUX
+#include <QtDBus>
+#endif
+
+class Accelerometer: public QObject
+{
+    Q_OBJECT
+
+
+public:
+    Accelerometer(QObject *parent = 0);
+    ~Accelerometer();
+    void start();
+    void stop();
+    void getAcceleration(qreal &x, qreal &y, qreal &z);
+
+private slots:
+    void internalRun();
+
+private:
+    QThread m_thread;
+    QMutex m_mutex;
+    bool m_terminate;
+    qreal m_values[3];
+};
+
+Accelerometer::Accelerometer(QObject *parent)
+    : QObject(parent)
+    , m_terminate(false)
+{
+    m_values[0] = 0;
+    m_values[1] = -0.2;
+    m_values[2] = 0;
+    moveToThread(&m_thread);
+    m_thread.start();
+}
+
+Accelerometer::~Accelerometer()
+{
+    stop();
+}
+
+void Accelerometer::start()
+{
+    QMetaObject::invokeMethod(this, "internalRun");
+}
+
+void Accelerometer::stop()
+{
+    m_mutex.lock();
+    m_terminate = true;
+    m_mutex.unlock();
+    if (m_thread.isRunning()) {
+        m_thread.quit();
+        m_thread.wait();
+    }
+}
+
+void Accelerometer::internalRun()
 {
 #ifdef Q_WS_MAEMO_5
     QDBusConnection connection(QDBusConnection::systemBus());
     if (connection.isConnected()) {
-        QDBusInterface interface("com.nokia.mce", "/com/nokia/icd", QString(), connection);
-        QDBusPendingReply<QString, QString, QString, int, int, int> reply;
-        reply = interface.asyncCall("get_device_orientation");
-        reply.waitForFinished();
-        x = static_cast<qreal>(reply.argumentAt<3>()) / 1000;
-        y = static_cast<qreal>(reply.argumentAt<4>()) / 1000;
-        z = static_cast<qreal>(reply.argumentAt<5>()) / 1000;
+        bool terminate = false;
+        while (!terminate) {
+            QDBusInterface interface("com.nokia.mce", "/com/nokia/icd", QString(), connection);
+            QDBusPendingReply<QString, QString, QString, int, int, int> reply;
+            reply = interface.asyncCall("get_device_orientation");
+            reply.waitForFinished();
+            m_mutex.lock();
+            m_values[0] = static_cast<qreal>(reply.argumentAt<3>()) / 1000;
+            m_values[1] = static_cast<qreal>(reply.argumentAt<4>()) / 1000;
+            m_values[2] = static_cast<qreal>(reply.argumentAt<5>()) / 1000;
+            terminate = m_terminate;
+            m_mutex.unlock();
+        }
     }
 #endif
+}
+
+void Accelerometer::getAcceleration(qreal &x, qreal &y, qreal &z)
+{
+    m_mutex.lock();
+    x = m_values[0];
+    y = m_values[1];
+    z = m_values[2];
+    m_mutex.unlock();
 }
 
 class Ball
@@ -46,19 +118,29 @@ public:
     QSizeF boundary;
 
 private:
+
+    Accelerometer m_accelerometer;
+
     void bounce(int x, int y) {
         velocity = QPointF(velocity.x() * x, velocity.y() * y);
         velocity *= 0.78;
     }
 
 public:
+
+    Ball() {
+        m_accelerometer.start();
+    }
+
+    ~Ball() {
+        m_accelerometer.stop();
+    }
+
     void update() {
 
         // acceleration
-        qreal xa = 0;
-        qreal ya = -0.2;
-        qreal za = 0;
-        getAcceleration(xa, ya, za);
+        qreal xa, ya, za;
+        m_accelerometer.getAcceleration(xa, ya, za);
 
         // velocity
         QPoint dv(-xa * 20, -ya * 20);

@@ -1,2 +1,2 @@
 SOURCES = bouncingball.cpp
-QT += dbus
+linux-*: QT += dbus
