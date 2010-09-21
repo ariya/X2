@@ -229,8 +229,8 @@ void JSHighlighter::highlightBlock(const QString &text)
     int state = previousBlockState();
     int start = 0;
     int i = 0;
-    while (i < text.length()) {
-        QChar ch = text.at(i);
+    while (i <= text.length()) {
+        QChar ch = (i < text.length()) ? text.at(i) : QChar();
         QChar next = (i < text.length() - 1) ? text.at(i + 1) : QChar();
 
         switch (state) {
