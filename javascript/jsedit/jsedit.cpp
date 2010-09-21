@@ -450,6 +450,23 @@ void JSEdit::resizeEvent(QResizeEvent *e)
     updateSidebar();
 }
 
+void JSEdit::wheelEvent(QWheelEvent *e)
+{
+    if (e->modifiers() == Qt::ControlModifier) {
+        int steps = e->delta() / 20;
+        steps = qBound(-3, steps, 3);
+        QFont textFont = font();
+        int pointSize = textFont.pointSize() + steps;
+        pointSize = qBound(10, pointSize, 40);
+        textFont.setPointSize(pointSize);
+        setFont(textFont);
+        updateSidebar();
+        e->accept();
+        return;
+    }
+    QPlainTextEdit::wheelEvent(e);
+}
+
 void JSEdit::updateCursor()
 {
     QTextEdit::ExtraSelection highlight;

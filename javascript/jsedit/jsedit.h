@@ -67,6 +67,7 @@ public slots:
 
 protected:
     void resizeEvent(QResizeEvent *e);
+    void wheelEvent(QWheelEvent *e);
 
 private slots:
     void updateCursor();
