@@ -54,7 +54,8 @@ public:
         BuiltIn,
         Sidebar,
         LineNumber,
-        Cursor
+        Cursor,
+        Marker
     } ColorComponent;
 
     JSEdit(QWidget *parent = 0);
@@ -64,6 +65,7 @@ public:
 
 public slots:
     void updateSidebar();
+    void mark(const QString &str, Qt::CaseSensitivity sens = Qt::CaseInsensitive);
 
 protected:
     void resizeEvent(QResizeEvent *e);

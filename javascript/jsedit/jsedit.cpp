@@ -36,6 +36,7 @@ class JSHighlighter : public QSyntaxHighlighter
 public:
     JSHighlighter(QTextDocument *parent = 0);
     void setColor(JSEdit::ColorComponent component, const QColor &color);
+    void mark(const QString &str, Qt::CaseSensitivity caseSensitivity);
 
 protected:
     void highlightBlock(const QString &text);
@@ -44,10 +45,13 @@ private:
     QSet<QString> m_keywords;
     QSet<QString> m_knownIds;
     QHash<JSEdit::ColorComponent, QColor> m_colors;
+    QString m_markString;
+    Qt::CaseSensitivity m_markCaseSensitivity;
 };
 
 JSHighlighter::JSHighlighter(QTextDocument *parent)
     : QSyntaxHighlighter(parent)
+    , m_markCaseSensitivity(Qt::CaseInsensitive)
 {
     // default color scheme
     m_colors[JSEdit::Normal]     = QColor("#000000");
@@ -58,6 +62,7 @@ JSHighlighter::JSHighlighter(QTextDocument *parent)
     m_colors[JSEdit::Identifier] = QColor("#000020");
     m_colors[JSEdit::Keyword]    = QColor("#000080");
     m_colors[JSEdit::BuiltIn]    = QColor("#008080");
+    m_colors[JSEdit::Marker]     = QColor("#ffff00");
 
     // https://developer.mozilla.org/en/JavaScript/Reference/Reserved_Words
     m_keywords << "break";
@@ -340,9 +345,30 @@ void JSHighlighter::highlightBlock(const QString &text)
     else
         state = Start;
 
+    if (!m_markString.isEmpty()) {
+        int pos = 0;
+        int len = m_markString.length();
+        QTextCharFormat markerFormat;
+        markerFormat.setBackground(m_colors[JSEdit::Marker]);
+        markerFormat.setForeground(m_colors[JSEdit::Normal]);
+        for (;;) {
+            pos = text.indexOf(m_markString, pos, m_markCaseSensitivity);
+            if (pos < 0)
+                break;
+            setFormat(pos, len, markerFormat);
+            ++pos;
+        }
+    }
+
     setCurrentBlockState(state);
 }
 
+void JSHighlighter::mark(const QString &str, Qt::CaseSensitivity caseSensitivity)
+{
+    m_markString = str;
+    m_markCaseSensitivity = caseSensitivity;
+    rehighlight();
+}
 
 struct BlockInfo {
     int position;
@@ -525,3 +551,7 @@ void JSEdit::updateSidebar()
     d->sidebar->update();
 }
 
+void JSEdit::mark(const QString &str, Qt::CaseSensitivity sens)
+{
+    d_ptr->highlighter->mark(str, sens);
+}
