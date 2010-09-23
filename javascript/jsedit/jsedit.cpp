@@ -495,15 +495,19 @@ void JSEdit::wheelEvent(QWheelEvent *e)
 
 void JSEdit::updateCursor()
 {
-    QTextEdit::ExtraSelection highlight;
-    highlight.format.setBackground(d_ptr->cursorColor);
-    highlight.format.setProperty(QTextFormat::FullWidthSelection, true);
-    highlight.cursor = textCursor();
-    highlight.cursor.clearSelection();
+    if (isReadOnly()) {
+        setExtraSelections(QList<QTextEdit::ExtraSelection>());
+    } else {
+        QTextEdit::ExtraSelection highlight;
+        highlight.format.setBackground(d_ptr->cursorColor);
+        highlight.format.setProperty(QTextFormat::FullWidthSelection, true);
+        highlight.cursor = textCursor();
+        highlight.cursor.clearSelection();
 
-    QList<QTextEdit::ExtraSelection> extraSelections;
-    extraSelections.append(highlight);
-    setExtraSelections(extraSelections);
+        QList<QTextEdit::ExtraSelection> extraSelections;
+        extraSelections.append(highlight);
+        setExtraSelections(extraSelections);
+    }
 }
 
 void JSEdit::updateSidebar(const QRect &rect, int d)
