@@ -184,8 +184,6 @@ void Invader::arc(qreal x, qreal y, qreal r)
 
 void Invader::fill(const QString &color, const QString &globalAlpha)
 {
-    QPainterPath copyPath = path;
-    copyPath.closeSubpath();
     QPainter p(&buffer);
     if (!globalAlpha.isEmpty() && globalAlpha != "defined")
         p.setOpacity(globalAlpha.toFloat());
@@ -198,14 +196,12 @@ void Invader::fill(const QString &color, const QString &globalAlpha)
 
 void Invader::stroke(const QString &color, const QString &globalAlpha)
 {
-    QPainterPath copyPath = path;
-    copyPath.closeSubpath();
     QPainter p(&buffer);
     p.setPen(QPen(QColor(color), 1));
     if (!globalAlpha.isEmpty() && globalAlpha != "defined")
         p.setOpacity(globalAlpha.toFloat());
     p.setBrush(Qt::NoBrush);
-    p.drawPath(copyPath);
+    p.drawPath(path);
     p.end();
     update();
 }
