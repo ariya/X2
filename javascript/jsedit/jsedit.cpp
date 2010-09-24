@@ -428,12 +428,12 @@ JSEdit::JSEdit(QWidget *parent)
     connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(updateSidebar()));
     connect(this, SIGNAL(updateRequest(QRect, int)), this, SLOT(updateSidebar(QRect, int)));
 
-#ifdef Q_OS_MAC
+#if defined(Q_OS_MAC)
     QFont textFont = font();
     textFont.setPointSize(12);
     textFont.setFamily("Monaco");
     setFont(textFont);
-#elif Q_OS_UNIX
+#elif defined(Q_OS_UNIX)
     QFont textFont = font();
     textFont.setFamily("Monospace");
     setFont(textFont);
