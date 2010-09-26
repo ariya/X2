@@ -39,6 +39,7 @@ class JSEditPrivate;
 class JSEdit: public QPlainTextEdit
 {
     Q_OBJECT
+    Q_PROPERTY(bool lineNumbersVisible READ isLineNumbersVisible WRITE setLineNumbersVisible)
 
 public:
 
@@ -63,9 +64,12 @@ public:
 
     void setColor(ColorComponent component, const QColor &color);
 
+    bool isLineNumbersVisible() const;
+
 public slots:
     void updateSidebar();
     void mark(const QString &str, Qt::CaseSensitivity sens = Qt::CaseInsensitive);
+    void setLineNumbersVisible(bool visible);
 
 protected:
     void resizeEvent(QResizeEvent *e);

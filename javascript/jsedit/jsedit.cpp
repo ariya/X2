@@ -412,6 +412,7 @@ public:
     JSEdit *editor;
     JSHighlighter *highlighter;
     SidebarWidget *sidebar;
+    bool showLineNumbers;
     QColor cursorColor;
 };
 
@@ -422,6 +423,7 @@ JSEdit::JSEdit(QWidget *parent)
     d_ptr->editor = this;
     d_ptr->highlighter = new JSHighlighter(document());
     d_ptr->sidebar = new SidebarWidget(this);
+    d_ptr->showLineNumbers = true;
     d_ptr->cursorColor = QColor(255, 255, 192);
 
     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(updateCursor()));
@@ -468,6 +470,17 @@ void JSEdit::setColor(ColorComponent component, const QColor &color)
     } else {
         d->highlighter->setColor(component, color);
     }
+}
+
+bool JSEdit::isLineNumbersVisible() const
+{
+    return d_ptr->showLineNumbers;
+}
+
+void JSEdit::setLineNumbersVisible(bool visible)
+{
+    d_ptr->showLineNumbers = visible;
+    updateSidebar();
 }
 
 void JSEdit::resizeEvent(QResizeEvent *e)
@@ -521,7 +534,15 @@ void JSEdit::updateSidebar()
 {
     Q_D(JSEdit);
 
+    if (!d->showLineNumbers) {
+        d->sidebar->hide();
+        setViewportMargins(0, 0, 0, 0);
+        d->sidebar->setGeometry(3, 0, 0, height());
+        return;
+    }
+
     d->sidebar->font = this->font();
+    d->sidebar->show();
 
     int digits = 1;
     int maxLines = blockCount();
