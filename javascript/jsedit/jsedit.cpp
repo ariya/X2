@@ -440,6 +440,7 @@ public:
     JSHighlighter *highlighter;
     SidebarWidget *sidebar;
     bool showLineNumbers;
+    bool textWrap;
     QColor cursorColor;
 };
 
@@ -451,6 +452,7 @@ JSEdit::JSEdit(QWidget *parent)
     d_ptr->highlighter = new JSHighlighter(document());
     d_ptr->sidebar = new SidebarWidget(this);
     d_ptr->showLineNumbers = true;
+    d_ptr->textWrap = true;
     d_ptr->cursorColor = QColor(255, 255, 192);
 
     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(updateCursor()));
@@ -508,6 +510,17 @@ void JSEdit::setLineNumbersVisible(bool visible)
 {
     d_ptr->showLineNumbers = visible;
     updateSidebar();
+}
+
+bool JSEdit::isTextWrapEnabled() const
+{
+    return d_ptr->textWrap;
+}
+
+void JSEdit::setTextWrapEnabled(bool enable)
+{
+    d_ptr->textWrap = enable;
+    setLineWrapMode(enable ? WidgetWidth : NoWrap);
 }
 
 void JSEdit::resizeEvent(QResizeEvent *e)

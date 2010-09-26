@@ -65,11 +65,13 @@ public:
     void setColor(ColorComponent component, const QColor &color);
 
     bool isLineNumbersVisible() const;
+    bool isTextWrapEnabled() const;
 
 public slots:
     void updateSidebar();
     void mark(const QString &str, Qt::CaseSensitivity sens = Qt::CaseInsensitive);
     void setLineNumbersVisible(bool visible);
+    void setTextWrapEnabled(bool enable);
 
 protected:
     void resizeEvent(QResizeEvent *e);
