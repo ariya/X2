@@ -203,9 +203,36 @@ JSHighlighter::JSHighlighter(QTextDocument *parent)
     m_knownIds << "parseFloat";
     m_knownIds << "parseInt";
     m_knownIds << "Infinity";
-    m_knownIds << "Math";
     m_knownIds << "NaN";
     m_knownIds << "undefined";
+
+    m_knownIds << "Math";
+    m_knownIds << "E";
+    m_knownIds << "LN2";
+    m_knownIds << "LN10";
+    m_knownIds << "LOG2E";
+    m_knownIds << "LOG10E";
+    m_knownIds << "PI";
+    m_knownIds << "SQRT1_2";
+    m_knownIds << "SQRT2";
+    m_knownIds << "abs";
+    m_knownIds << "acos";
+    m_knownIds << "asin";
+    m_knownIds << "atan";
+    m_knownIds << "atan2";
+    m_knownIds << "ceil";
+    m_knownIds << "cos";
+    m_knownIds << "exp";
+    m_knownIds << "floor";
+    m_knownIds << "log";
+    m_knownIds << "max";
+    m_knownIds << "min";
+    m_knownIds << "pow";
+    m_knownIds << "random";
+    m_knownIds << "round";
+    m_knownIds << "sin";
+    m_knownIds << "sqrt";
+    m_knownIds << "tan";
 
     m_knownIds << "document";
     m_knownIds << "window";
