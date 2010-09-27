@@ -594,25 +594,24 @@ void JSEdit::updateSidebar()
     d->sidebar->setGeometry(0, 0, sw, height());
     QRectF sidebarRect(0, 0, sw, height());
 
-    QVector<BlockInfo> lineNumbers;
-    lineNumbers.reserve(d->sidebar->lineNumbers.count());
     QTextBlock block = firstVisibleBlock();
+    int index = 0;
     while (block.isValid()) {
         if (block.isVisible()) {
             QRectF rect = blockBoundingGeometry(block).translated(contentOffset());
             if (sidebarRect.intersects(rect)) {
-                BlockInfo ln;
-                ln.position = rect.top();
-                ln.number = block.blockNumber() + 1;
-                lineNumbers += ln;
+                if (d->sidebar->lineNumbers.count() >= index)
+                    d->sidebar->lineNumbers.resize(index + 1);
+                d->sidebar->lineNumbers[index].position = rect.top();
+                d->sidebar->lineNumbers[index].number = block.blockNumber() + 1;
+                ++index;
             }
             if (rect.top() > sidebarRect.bottom())
                 break;
         }
         block = block.next();
     }
-
-    d->sidebar->lineNumbers = lineNumbers;
+    d->sidebar->lineNumbers.resize(index);
     d->sidebar->update();
 }
 
