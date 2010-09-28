@@ -40,6 +40,7 @@ class JSEdit: public QPlainTextEdit
 {
     Q_OBJECT
     Q_PROPERTY(bool lineNumbersVisible READ isLineNumbersVisible WRITE setLineNumbersVisible)
+    Q_PROPERTY(bool textWrapEnabled READ isTextWrapEnabled WRITE setTextWrapEnabled)
 
 public:
 
