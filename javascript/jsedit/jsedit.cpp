@@ -31,6 +31,12 @@
 
 #include <QtGui>
 
+class JSBlockData: public QTextBlockUserData
+{
+public:
+    QList<int> bracketPositions;
+};
+
 class JSHighlighter : public QSyntaxHighlighter
 {
 public:
@@ -250,7 +256,7 @@ void JSHighlighter::highlightBlock(const QString &text)
 {
     // parsing state
     enum {
-        Start = -1,
+        Start = 0,
         Number = 1,
         Identifier = 2,
         String = 3,
@@ -258,7 +264,16 @@ void JSHighlighter::highlightBlock(const QString &text)
         Regex = 5
     };
 
-    int state = previousBlockState();
+    QList<int> bracketPositions;
+
+    int blockState = previousBlockState();
+    int bracketLevel = blockState >> 4;
+    int state = blockState & 15;
+    if (blockState < 0) {
+        bracketLevel = 0;
+        state = Start;
+    }
+
     int start = 0;
     int i = 0;
     while (i <= text.length()) {
@@ -293,6 +308,13 @@ void JSHighlighter::highlightBlock(const QString &text)
             } else {
                 if (!QString("(){}[]").contains(ch))
                     setFormat(start, 1, m_colors[JSEdit::Operator]);
+                if (ch =='{' || ch == '}') {
+                    bracketPositions += i;
+                    if (ch == '{')
+                        bracketLevel++;
+                    else
+                        bracketLevel--;
+                }
                 ++i;
                 state = Start;
             }
@@ -387,7 +409,17 @@ void JSHighlighter::highlightBlock(const QString &text)
         }
     }
 
-    setCurrentBlockState(state);
+    if (!bracketPositions.isEmpty()) {
+        JSBlockData *blockData = reinterpret_cast<JSBlockData*>(currentBlock().userData());
+        if (!blockData) {
+            blockData = new JSBlockData;
+            currentBlock().setUserData(blockData);
+        }
+        blockData->bracketPositions = bracketPositions;
+    }
+
+    blockState = (state & 15) | (bracketLevel << 4);
+    setCurrentBlockState(blockState);
 }
 
 void JSHighlighter::mark(const QString &str, Qt::CaseSensitivity caseSensitivity)
@@ -442,6 +474,11 @@ public:
     bool showLineNumbers;
     bool textWrap;
     QColor cursorColor;
+    bool bracketsMatching;
+    QList<int> matchPositions;
+    QColor bracketMatchColor;
+    QList<int> errorPositions;
+    QColor bracketErrorColor;
 };
 
 JSEdit::JSEdit(QWidget *parent)
@@ -453,7 +490,10 @@ JSEdit::JSEdit(QWidget *parent)
     d_ptr->sidebar = new SidebarWidget(this);
     d_ptr->showLineNumbers = true;
     d_ptr->textWrap = true;
+    d_ptr->bracketsMatching = true;
     d_ptr->cursorColor = QColor(255, 255, 192);
+    d_ptr->bracketMatchColor = QColor(180, 238, 180);
+    d_ptr->bracketErrorColor = QColor(224, 128, 128);
 
     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(updateCursor()));
     connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(updateSidebar()));
@@ -496,6 +536,12 @@ void JSEdit::setColor(ColorComponent component, const QColor &color)
     } else if (component == Cursor) {
         d->cursorColor = color;
         updateCursor();
+    } else if (component == BracketMatch) {
+        d->bracketMatchColor = color;
+        updateCursor();
+    } else if (component == BracketError) {
+        d->bracketErrorColor = color;
+        updateCursor();
     } else {
         d->highlighter->setColor(component, color);
     }
@@ -523,6 +569,17 @@ void JSEdit::setTextWrapEnabled(bool enable)
     setLineWrapMode(enable ? WidgetWidth : NoWrap);
 }
 
+bool JSEdit::isBracketsMatchingEnabled() const
+{
+    return d_ptr->bracketsMatching;
+}
+
+void JSEdit::setBracketsMatchingEnabled(bool enable)
+{
+    d_ptr->bracketsMatching = enable;
+    updateCursor();
+}
+
 void JSEdit::resizeEvent(QResizeEvent *e)
 {
     QPlainTextEdit::resizeEvent(e);
@@ -548,17 +605,118 @@ void JSEdit::wheelEvent(QWheelEvent *e)
 
 void JSEdit::updateCursor()
 {
+    Q_D(JSEdit);
+
     if (isReadOnly()) {
         setExtraSelections(QList<QTextEdit::ExtraSelection>());
     } else {
+
+        d->matchPositions.clear();
+        d->errorPositions.clear();
+
+        if (d->bracketsMatching && textCursor().block().userData()) {
+            QTextCursor cursor = textCursor();
+            int cursorPosition = cursor.position();
+
+            if (document()->characterAt(cursorPosition) == '{') {
+                QTextBlock block = cursor.block();
+                JSBlockData *blockData = reinterpret_cast<JSBlockData*>(block.userData());
+                if (!blockData->bracketPositions.isEmpty()) {
+                    int depth = 1;
+                    QTextDocument *doc = document();
+                    int matchPos = -1;
+                    while (block.isValid() && (matchPos < 0)) {
+                        blockData = reinterpret_cast<JSBlockData*>(block.userData());
+                        if (blockData && !blockData->bracketPositions.isEmpty()) {
+                            for (int c = 0; c < blockData->bracketPositions.count(); ++c) {
+                                int absPos = block.position() + blockData->bracketPositions.at(c);
+                                if (absPos <= cursorPosition)
+                                    continue;
+                                QChar symbol = doc->characterAt(absPos);
+                                if (symbol == '{')
+                                    depth++;
+                                else
+                                    depth--;
+                                if (depth == 0) {
+                                    matchPos = absPos;
+                                    d->matchPositions += cursorPosition;
+                                    d->matchPositions += matchPos;
+                                    break;
+                                }
+                            }
+                        }
+                        block = block.next();
+                    }
+                    if (matchPos < 0)
+                        d->errorPositions += cursorPosition;
+                }
+            }
+
+            if (document()->characterAt(cursorPosition - 1) == '}') {
+                QTextBlock block = cursor.block();
+                JSBlockData *blockData = reinterpret_cast<JSBlockData*>(block.userData());
+                if (!blockData->bracketPositions.isEmpty()) {
+                    int depth = 1;
+                    QTextDocument *doc = document();
+                    int matchPos = -1;
+                    while (block.isValid() && (matchPos < 0)) {
+                        blockData = reinterpret_cast<JSBlockData*>(block.userData());
+                        if (blockData && !blockData->bracketPositions.isEmpty()) {
+                            for (int c = blockData->bracketPositions.count() - 1; c >= 0; --c) {
+                                int absPos = block.position() + blockData->bracketPositions.at(c);
+                                if (absPos >= cursorPosition - 1)
+                                    continue;
+                                QChar symbol = doc->characterAt(absPos);
+                                if (symbol == '}')
+                                    depth++;
+                                else
+                                    depth--;
+                                if (depth == 0) {
+                                    matchPos = absPos;
+                                    d->matchPositions += cursorPosition - 1;
+                                    d->matchPositions += matchPos;
+                                    break;
+                                }
+                            }
+                        }
+                        block = block.previous();
+                    }
+                    if (matchPos < 0)
+                        d->errorPositions += cursorPosition - 1;
+                }
+
+            }
+        }
+
         QTextEdit::ExtraSelection highlight;
-        highlight.format.setBackground(d_ptr->cursorColor);
+        highlight.format.setBackground(d->cursorColor);
         highlight.format.setProperty(QTextFormat::FullWidthSelection, true);
         highlight.cursor = textCursor();
         highlight.cursor.clearSelection();
 
         QList<QTextEdit::ExtraSelection> extraSelections;
         extraSelections.append(highlight);
+
+        for (int i = 0; i < d->matchPositions.count(); ++i) {
+            int pos = d->matchPositions.at(i);
+            QTextEdit::ExtraSelection matchHighlight;
+            matchHighlight.format.setBackground(d->bracketMatchColor);
+            matchHighlight.cursor = textCursor();
+            matchHighlight.cursor.setPosition(pos);
+            matchHighlight.cursor.setPosition(pos + 1, QTextCursor::KeepAnchor);
+            extraSelections.append(matchHighlight);
+        }
+
+        for (int i = 0; i < d->errorPositions.count(); ++i) {
+            int pos = d->errorPositions.at(i);
+            QTextEdit::ExtraSelection errorHighlight;
+            errorHighlight.format.setBackground(d->bracketErrorColor);
+            errorHighlight.cursor = textCursor();
+            errorHighlight.cursor.setPosition(pos);
+            errorHighlight.cursor.setPosition(pos + 1, QTextCursor::KeepAnchor);
+            extraSelections.append(errorHighlight);
+        }
+
         setExtraSelections(extraSelections);
     }
 }

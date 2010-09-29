@@ -41,6 +41,7 @@ class JSEdit: public QPlainTextEdit
     Q_OBJECT
     Q_PROPERTY(bool lineNumbersVisible READ isLineNumbersVisible WRITE setLineNumbersVisible)
     Q_PROPERTY(bool textWrapEnabled READ isTextWrapEnabled WRITE setTextWrapEnabled)
+    Q_PROPERTY(bool bracketsMatchingEnabled READ isBracketsMatchingEnabled WRITE setBracketsMatchingEnabled)
 
 public:
 
@@ -57,7 +58,9 @@ public:
         Sidebar,
         LineNumber,
         Cursor,
-        Marker
+        Marker,
+        BracketMatch,
+        BracketError,
     } ColorComponent;
 
     JSEdit(QWidget *parent = 0);
@@ -67,12 +70,14 @@ public:
 
     bool isLineNumbersVisible() const;
     bool isTextWrapEnabled() const;
+    bool isBracketsMatchingEnabled() const;
 
 public slots:
     void updateSidebar();
     void mark(const QString &str, Qt::CaseSensitivity sens = Qt::CaseInsensitive);
     void setLineNumbersVisible(bool visible);
     void setTextWrapEnabled(bool enable);
+    void setBracketsMatchingEnabled(bool enable);
 
 protected:
     void resizeEvent(QResizeEvent *e);
