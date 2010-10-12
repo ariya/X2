@@ -40,16 +40,19 @@ int main(int argc, char **argv)
     editor.resize(QApplication::desktop()->availableGeometry().size() / 2);
 
     // dark color scheme
-    editor.setColor(JSEdit::Background, QColor("#0C152B"));
-    editor.setColor(JSEdit::Normal,     QColor("#FFFFFF"));
-    editor.setColor(JSEdit::Comment,    QColor("#666666"));
-    editor.setColor(JSEdit::Number,     QColor("#DBF76C"));
-    editor.setColor(JSEdit::String,     QColor("#5ED363"));
-    editor.setColor(JSEdit::Operator,   QColor("#FF7729"));
-    editor.setColor(JSEdit::Identifier, QColor("#FFFFFF"));
-    editor.setColor(JSEdit::Keyword,    QColor("#FDE15D"));
-    editor.setColor(JSEdit::BuiltIn,    QColor("#9CB6D4"));
-    editor.setColor(JSEdit::Cursor,     QColor("#1E346B"));
+    editor.setColor(JSEdit::Background,    QColor("#0C152B"));
+    editor.setColor(JSEdit::Normal,        QColor("#FFFFFF"));
+    editor.setColor(JSEdit::Comment,       QColor("#666666"));
+    editor.setColor(JSEdit::Number,        QColor("#DBF76C"));
+    editor.setColor(JSEdit::String,        QColor("#5ED363"));
+    editor.setColor(JSEdit::Operator,      QColor("#FF7729"));
+    editor.setColor(JSEdit::Identifier,    QColor("#FFFFFF"));
+    editor.setColor(JSEdit::Keyword,       QColor("#FDE15D"));
+    editor.setColor(JSEdit::BuiltIn,       QColor("#9CB6D4"));
+    editor.setColor(JSEdit::Cursor,        QColor("#1E346B"));
+    editor.setColor(JSEdit::Marker,        QColor("#DBF76C"));
+    editor.setColor(JSEdit::BracketMatch,  QColor("#1AB0A6"));
+    editor.setColor(JSEdit::BracketError,  QColor("#A82224"));
 
     editor.setPlainText(contents);
     editor.show();
