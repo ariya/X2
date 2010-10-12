@@ -39,9 +39,10 @@ class JSEditPrivate;
 class JSEdit: public QPlainTextEdit
 {
     Q_OBJECT
+    Q_PROPERTY(bool bracketsMatchingEnabled READ isBracketsMatchingEnabled WRITE setBracketsMatchingEnabled)
+    Q_PROPERTY(bool codeFoldingEnabled READ isCodeFoldingEnabled WRITE setCodeFoldingEnabled)
     Q_PROPERTY(bool lineNumbersVisible READ isLineNumbersVisible WRITE setLineNumbersVisible)
     Q_PROPERTY(bool textWrapEnabled READ isTextWrapEnabled WRITE setTextWrapEnabled)
-    Q_PROPERTY(bool bracketsMatchingEnabled READ isBracketsMatchingEnabled WRITE setBracketsMatchingEnabled)
 
 public:
 
@@ -61,6 +62,7 @@ public:
         Marker,
         BracketMatch,
         BracketError,
+        FoldIndicator
     } ColorComponent;
 
     JSEdit(QWidget *parent = 0);
@@ -68,16 +70,25 @@ public:
 
     void setColor(ColorComponent component, const QColor &color);
 
+    bool isBracketsMatchingEnabled() const;
+    bool isCodeFoldingEnabled() const;
     bool isLineNumbersVisible() const;
     bool isTextWrapEnabled() const;
-    bool isBracketsMatchingEnabled() const;
+
+    bool isFoldable(int line) const;
+    bool isFolded(int line) const;
 
 public slots:
     void updateSidebar();
     void mark(const QString &str, Qt::CaseSensitivity sens = Qt::CaseInsensitive);
+    void setBracketsMatchingEnabled(bool enable);
+    void setCodeFoldingEnabled(bool enable);
     void setLineNumbersVisible(bool visible);
     void setTextWrapEnabled(bool enable);
-    void setBracketsMatchingEnabled(bool enable);
+
+    void fold(int line);
+    void unfold(int line);
+    void toggleFold(int line);
 
 protected:
     void resizeEvent(QResizeEvent *e);

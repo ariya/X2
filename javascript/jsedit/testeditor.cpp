@@ -53,6 +53,7 @@ int main(int argc, char **argv)
     editor.setColor(JSEdit::Marker,        QColor("#DBF76C"));
     editor.setColor(JSEdit::BracketMatch,  QColor("#1AB0A6"));
     editor.setColor(JSEdit::BracketError,  QColor("#A82224"));
+    editor.setColor(JSEdit::FoldIndicator, QColor("#555555"));
 
     editor.setPlainText(contents);
     editor.show();
