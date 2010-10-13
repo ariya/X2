@@ -599,11 +599,28 @@ static int findOpeningMatch(const QTextDocument *doc, int cursorPosition)
     return -1;
 }
 
+class JSDocLayout: public QPlainTextDocumentLayout
+{
+public:
+    JSDocLayout(QTextDocument *doc);
+    void forceUpdate();
+};
+
+JSDocLayout::JSDocLayout(QTextDocument *doc)
+    : QPlainTextDocumentLayout(doc)
+{
+}
+
+void JSDocLayout::forceUpdate()
+{
+    emit documentSizeChanged(documentSize());
+}
 
 class JSEditPrivate
 {
 public:
     JSEdit *editor;
+    JSDocLayout *layout;
     JSHighlighter *highlighter;
     SidebarWidget *sidebar;
     bool showLineNumbers;
@@ -622,6 +639,7 @@ JSEdit::JSEdit(QWidget *parent)
     , d_ptr(new JSEditPrivate)
 {
     d_ptr->editor = this;
+    d_ptr->layout = new JSDocLayout(document());
     d_ptr->highlighter = new JSHighlighter(document());
     d_ptr->sidebar = new SidebarWidget(this);
     d_ptr->showLineNumbers = true;
@@ -631,6 +649,8 @@ JSEdit::JSEdit(QWidget *parent)
     d_ptr->bracketMatchColor = QColor(180, 238, 180);
     d_ptr->bracketErrorColor = QColor(224, 128, 128);
     d_ptr->codeFolding = true;
+
+    document()->setDocumentLayout(d_ptr->layout);
 
     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(updateCursor()));
     connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(updateSidebar()));
@@ -650,6 +670,7 @@ JSEdit::JSEdit(QWidget *parent)
 
 JSEdit::~JSEdit()
 {
+    delete d_ptr->layout;
 }
 
 void JSEdit::setColor(ColorComponent component, const QColor &color)
@@ -796,6 +817,9 @@ void JSEdit::fold(int line)
     document()->markContentsDirty(startBlock.position(), endPos - startBlock.position() + 1);
     updateSidebar();
     update();
+
+    JSDocLayout *layout = reinterpret_cast<JSDocLayout*>(document()->documentLayout());
+    layout->forceUpdate();
 }
 
 void JSEdit::unfold(int line)
@@ -811,10 +835,12 @@ void JSEdit::unfold(int line)
         block = block.next();
     }
 
-    d_ptr->highlighter->rehighlight();
     document()->markContentsDirty(startBlock.position(), endPos - startBlock.position() + 1);
     updateSidebar();
     update();
+
+    JSDocLayout *layout = reinterpret_cast<JSDocLayout*>(document()->documentLayout());
+    layout->forceUpdate();
 }
 
 void JSEdit::toggleFold(int line)
@@ -959,12 +985,10 @@ void JSEdit::updateSidebar()
     d->sidebar->setGeometry(0, 0, sw, height());
     QRectF sidebarRect(0, 0, sw, height());
 
-    QPlainTextDocumentLayout *layout = qobject_cast<QPlainTextDocumentLayout*>(document()->documentLayout());
     QTextBlock block = firstVisibleBlock();
     int index = 0;
     while (block.isValid()) {
         if (block.isVisible()) {
-            layout->ensureBlockLayout(block);
             QRectF rect = blockBoundingGeometry(block).translated(contentOffset());
             if (sidebarRect.intersects(rect)) {
                 if (d->sidebar->lineNumbers.count() >= index)
@@ -988,4 +1012,3 @@ void JSEdit::mark(const QString &str, Qt::CaseSensitivity sens)
 {
     d_ptr->highlighter->mark(str, sens);
 }
-
