@@ -41,16 +41,13 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    FILE* f = fopen(argv[1], "r");
+    FILE* f = fopen(argv[1], "rb");
     if (!f) {
         printf("Error: unable to open file %s\n", argv[1]);
         return 0;
     }
-    int len = 0;
-    while (!feof(f)) {
-        fgetc(f);
-        ++len;
-    }
+    fseek(f, 0, SEEK_END);
+    int len = ftell(f);
     rewind(f);
     char* buf = new char[len + 1];
     fread(buf, 1, len, f);
