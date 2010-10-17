@@ -17,14 +17,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-function getViewport() {
-    var h = window.innerHeight || document.documentElement.clientHeight
-            || document.getElementsByTagName("body")[0].clientHeight;
-    var w = window.innerWidth || document.documentElement.clientWidth
-            || document.getElementsByTagName("body")[0].clientWidth;
-    return { width: w, height: h }
-}
-
 var canvas = document.getElementById("plasmaeffect");
 var context = canvas.getContext("2d");
 var width = 640;
@@ -72,7 +64,7 @@ function setUp() {
 
     var _palette = palette;
     var _redComponentChangeFactor = redComponentChangeFactor,
-	_greenComponentChangeFactor = greenComponentChangeFactor,
+        _greenComponentChangeFactor = greenComponentChangeFactor,
         _blueComponentChangeFactor = blueComponentChangeFactor;
     var r = redComponent, g = greenComponent, b = blueComponent;
     var _Rgb = Rgb, newRgb;
@@ -91,7 +83,7 @@ function setUp() {
 
     for (y = 0; y < _height; ++y)
         for (x = 0; x < _width; ++x)
-	    _pattern[y * _width + x] = _abs(f[x] + f[y]) % 255;
+            _pattern[y * _width + x] = _abs(f[x] + f[y]) % 255;
 }
 
 function setBaseFunction(f) {
@@ -128,11 +120,7 @@ function resize(mode) {
     if (animationTimer)
         toggleAnimation();
 
-    if (mode == "full") {
-        var viewport = getViewport();
-        width = viewport.width;
-        height = viewport.height;
-    } else if (mode == "grow") {
+    if (mode == "grow") {
         width = Math.round(width * 1.2);
         height = Math.round(height * 1.2);
     } else if (mode == "shrink") {
@@ -168,7 +156,7 @@ function paint() {
         for (x = 0; x < _width; ++x) {
             i = y * _width + x;
             pal = _palette[_pattern[i]];
-	    i <<= 2;
+            i <<= 2;
             data[i] = pal.red;
             data[i+1] = pal.green;
             data[i+2] = pal.blue;
@@ -179,7 +167,7 @@ function paint() {
 }
 
 function updateFps() {
-    document.title = "FPS: " + (fps - oldFps);
+    document.getElementById("fps").innerText = (fps - oldFps);
     oldFps = fps;
 }
 
@@ -202,7 +190,7 @@ function changeAnimation(msec) {
 function onKeyPress(event) {
     event = (event) ? event : window.event;
     var k = event.keyCode;
-    switch(k) {
+    switch (k) {
         case 116: /* 't' */ setBaseFunction(Math.tan); break;
         case 115: /* 's' */ setBaseFunction(Math.sin); break;
         case 114: /* 'r' */ setBaseColor("red"); break;
@@ -213,7 +201,6 @@ function onKeyPress(event) {
         case 79:  /* 'o' */ changeAnimation(timerInterval + 5); break;
         case 80:  /* 'p' */ changeAnimation(timerInterval - 5); break;
 
-        case 102: /* 'f' */ resize("full"); break;
         case 43:  /* '+' */ resize("grow"); break;
         case 45:  /* '-' */ resize("shrink"); break;
 
@@ -254,15 +241,15 @@ function onKeyPress(event) {
                 beta -= 8;
             else
                 alpha -= 2;
-	    setUp();
+            setUp();
             break;
     }
 }
 
 function start() {
-    document.body.style.overflow = "hidden"; // hide scrollbars
     document.onkeypress = onKeyPress;
     document.onkeydown= onKeyPress;
+    setBaseColor('blue')
     resize();
     setInterval(updateFps, 1000);
 }
