@@ -35,5 +35,6 @@ How to use:
 
 Some included examples:
 
-  rot13.js     Encyrpt a text file using ROT-13 substitution cipher
+  rot13.js       Encyrpt a text file using ROT-13 substitution cipher
+  countlines.js  Count non-empty lines in a file
 
