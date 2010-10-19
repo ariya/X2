@@ -36,6 +36,4 @@ How to use:
 Some included examples:
 
   rot13.js     Encyrpt a text file using ROT-13 substitution cipher
-  replace.js   Search and replace text using regular expression
-  beautify.js  Auto-format and reindent JavaScript source code
 
