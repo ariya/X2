@@ -324,10 +324,11 @@ static Handle<Value> stream_next(const Arguments& args)
     void *data = args.This()->GetPointerFromInternalField(0);
     std::fstream *fs = reinterpret_cast<std::fstream*>(data);
 
+    if (fs->eof())
+        return ThrowException(String::New("Exception: Stream.next() reaches end of file"));
+
     std::string buffer;
     std::getline(*fs, buffer);
-    if (fs->eof())
-        return ThrowException(String::New("Exception: Stream.readLine() reaches end of file"));
 
     return String::New(buffer.c_str());
 }
@@ -340,12 +341,14 @@ static Handle<Value> stream_readLine(const Arguments& args)
     void *data = args.This()->GetPointerFromInternalField(0);
     std::fstream *fs = reinterpret_cast<std::fstream*>(data);
 
-    std::string buffer;
-    std::getline(*fs, buffer);
     if (fs->eof())
         return String::NewSymbol("");
 
-    buffer.append("\n");
+    std::string buffer;
+    std::getline(*fs, buffer);
+    if (!fs->eof())
+        buffer.append("\n");
+
     return String::New(buffer.c_str());
 }
 
