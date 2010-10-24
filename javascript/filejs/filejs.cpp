@@ -31,6 +31,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -260,11 +261,12 @@ static Handle<Value> stream_constructor(const Arguments& args)
         return ThrowException(String::New("Exception: Stream constructor accepts 1 or 2 arguments"));
 
     String::Utf8Value name(args[0]);
+    String::Utf8Value modes(args[1]);
 
     std::fstream::openmode mode = std::fstream::in;
     if (args.Length() == 2) {
         String::Utf8Value m(args[0]);
-        const char* options = *String::Utf8Value(args[1]);
+        const char* options = *modes;
         bool read = strchr(options, 'r');
         bool write = strchr(options, 'w');
         if (!read && !write)
