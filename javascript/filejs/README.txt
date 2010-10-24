@@ -19,7 +19,7 @@ Build steps:
   svn checkout http://v8.googlecode.com/svn/trunk lib
   cd lib && scons mode=release
   cd ..
-  g++ -o filejs filejs.cpp -Ilib/include/ -lv8 -Llib
+  g++ -o filejs filejs.cpp -Ilib/include/ -lv8 -Llib -lpthread
 
 Note 1: On 64-bit system, you may need to add 'arch=x64' when running scons.
 
