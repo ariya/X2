@@ -1,6 +1,5 @@
-#include <QtGui/QApplication>
-#include <QtCore/QProcess>
-#include <QtWebKit/QWebView>
+#include <QtGui>
+#include <QtWebKit>
 
 #if defined(Q_OS_SYMBIAN) && defined(ORIENTATIONLOCK)
 #include <eikenv.h>
@@ -23,15 +22,28 @@ int main(int argc, char *argv[])
     Q_UNUSED(error)
 #endif // ORIENTATIONLOCK
 
-    QWebView webView;
-    webView.load(QString::fromLatin1("html/examples/kitchensink/index.html"));
+    const QSize screenSize(640, 360);
+
+    QGraphicsScene scene;
+
+    QGraphicsView view(&scene);
+    view.setFrameShape(QFrame::NoFrame);
+    view.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    view.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    QGraphicsWebView webview;
+    webview.resize(screenSize);
+    webview.load(QString::fromLatin1("html/examples/kitchensink/index.html"));
+
+    scene.addItem(&webview);
 
 #if defined(Q_OS_SYMBIAN)
-    webView.showFullScreen();
+    view.showFullScreen();
 #elif defined(Q_WS_MAEMO_5)
-    webView.showMaximized();
+    view.showMaximized();
 #else
-    webView.show();
+    view.resize(screenSize);
+    view.show();
 #endif
 
     return app.exec();
