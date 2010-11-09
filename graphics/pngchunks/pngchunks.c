@@ -28,7 +28,7 @@ int main(int argc, char **argv)
     int total, i;
 
     if (argc != 2) {
-        printf("Usage: pnginfo image.png\n\n");
+        printf("Usage: pngchunks image.png\n\n");
         return -1;
     }
 
