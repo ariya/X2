@@ -29,11 +29,10 @@
 
 #include "kineticmodel.h"
 
-#include <QDebug>
 #include <QTimer>
 #include <QDateTime>
 
-static const int KineticModelDefaultUpdateInterval = 25; // ms
+static const int KineticModelDefaultUpdateInterval = 15; // ms
 
 class KineticModelPrivate
 {
@@ -42,7 +41,7 @@ public:
 
     bool released;
     qreal position;
-    qreal speed;
+    qreal velocity;
     qreal maximumSpeed;
     qreal deacceleration;
 
@@ -55,9 +54,9 @@ public:
 KineticModelPrivate::KineticModelPrivate()
     : released(false)
     , position(0)
-    , speed(0)
+    , velocity(0)
     , maximumSpeed(1500)
-    , deacceleration(300)
+    , deacceleration(900)
     , lastPosition(0)
 {
 
@@ -100,11 +99,11 @@ qreal KineticModel::maximumSpeed() const
     return d_ptr->maximumSpeed;
 }
 
-void KineticModel::setMaximumSpeed(qreal speed)
+void KineticModel::setMaximumSpeed(qreal maxSpeed)
 {
-    if (speed <= 0)
+    if (maxSpeed <= 0)
         return;
-    d_ptr->maximumSpeed = speed;
+    d_ptr->maximumSpeed = maxSpeed;
 }
 
 qreal KineticModel::deacceleration() const
@@ -129,7 +128,8 @@ void KineticModel::setUpdateInterval(int ms)
 
 void KineticModel::resetSpeed()
 {
-    d_ptr->speed = 0;
+    d_ptr->velocity = 0;
+    d_ptr->lastPosition = d_ptr->position;
 }
 
 void KineticModel::release()
@@ -137,7 +137,7 @@ void KineticModel::release()
     update();
     d_ptr->released = true;
 
-    d_ptr->speed = qBound(-d_ptr->maximumSpeed, d_ptr->speed, d_ptr->maximumSpeed);
+    d_ptr->velocity = qBound(-d_ptr->maximumSpeed, d_ptr->velocity, d_ptr->maximumSpeed);
 
     if (!d_ptr->ticker.isActive())
         d_ptr->ticker.start();
@@ -150,23 +150,28 @@ void KineticModel::update()
     int elapsed = d_ptr->timestamp.elapsed();
 
     // too fast gives less accuracy
-    if (elapsed < 10)
+    if (elapsed < 5)
         return;
 
     qreal delta = static_cast<qreal>(elapsed) / 1000.0;
 
     if (d->released) {
-        d->position += (d->speed * delta);
-        if (d->speed < d->deacceleration && d->speed >= -d->deacceleration) {
-            d->speed = 0;
+        d->position += (d->velocity * delta);
+        qreal vstep = d->deacceleration * delta;
+        if (d->velocity < vstep && d->velocity >= -vstep) {
+            d->velocity = 0;
             d->ticker.stop();
         } else {
-            qreal ds = (d->speed > 0) ? d->deacceleration : -d->deacceleration;
-            d->speed -= (ds * delta);
+            if (d->velocity > 0)
+                d->velocity -= vstep;
+            else
+                d->velocity += vstep;
         }
         emit positionChanged(d->position);
     } else {
-        d->speed = (d->position - d->lastPosition) / delta;
+        qreal lastSpeed = d->velocity;
+        qreal currentSpeed = (d->position - d->lastPosition) / delta;
+        d->velocity = .75 * lastSpeed + .25 * currentSpeed;
         d->lastPosition = d->position;
     }
 
