@@ -37,10 +37,10 @@ var KineticModel = (function () {
         this.maximum = max;
 
         this.released = false;
+        this.duration = 1403;
         this.position = 0;
         this.velocity = 0;
-        this.maximumSpeed = 1981;
-        this.deacceleration = 400;
+        this.deacceleration = 0;
 
         this.timestamp = Date.now();
         this.lastPosition = 0;
@@ -84,10 +84,7 @@ var KineticModel = (function () {
     KineticModel.prototype.release = function ()
     {
         this.released = true;
-
-        this.velocity = Math.min(this.velocity, this.maximumSpeed);
-        this.velocity = Math.max(this.velocity, -this.maximumSpeed);
-
+        this.deacceleration = Math.abs(this.velocity * 1000 / this.duration);
         this.triggerUpdate(this.update);
     };
 

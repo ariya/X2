@@ -40,9 +40,9 @@ public:
     QTimer ticker;
 
     bool released;
+    int duration;
     qreal position;
     qreal velocity;
-    qreal maximumSpeed;
     qreal deacceleration;
 
     QTime timestamp;
@@ -53,10 +53,10 @@ public:
 
 KineticModelPrivate::KineticModelPrivate()
     : released(false)
+    , duration(1403)
     , position(0)
     , velocity(0)
-    , maximumSpeed(1500)
-    , deacceleration(900)
+    , deacceleration(0)
     , lastPosition(0)
 {
 
@@ -73,6 +73,16 @@ KineticModel::KineticModel(QObject *parent)
 KineticModel::~KineticModel()
 {
 
+}
+
+int KineticModel::duration() const
+{
+    return d_ptr->duration;
+}
+
+void KineticModel::setDuration(int ms)
+{
+    d_ptr->duration = ms;
 }
 
 qreal KineticModel::position() const
@@ -94,28 +104,6 @@ void KineticModel::setPosition(qreal pos)
         d_ptr->ticker.start();
 }
 
-qreal KineticModel::maximumSpeed() const
-{
-    return d_ptr->maximumSpeed;
-}
-
-void KineticModel::setMaximumSpeed(qreal maxSpeed)
-{
-    if (maxSpeed <= 0)
-        return;
-    d_ptr->maximumSpeed = maxSpeed;
-}
-
-qreal KineticModel::deacceleration() const
-{
-    return d_ptr->deacceleration;
-}
-
-void KineticModel::setDeacceleration(qreal deacceleration)
-{
-    d_ptr->deacceleration = deacceleration;
-}
-
 int KineticModel::updateInterval() const
 {
     return d_ptr->ticker.interval();
@@ -134,13 +122,18 @@ void KineticModel::resetSpeed()
 
 void KineticModel::release()
 {
+    Q_D(KineticModel);
+
+    d->released = true;
+
+    d->deacceleration = d->velocity * 1000 / (1 + d_ptr->duration);
+    if (d->deacceleration < 0)
+        d->deacceleration = -d->deacceleration;
+
+    if (!d->ticker.isActive())
+        d->ticker.start();
+
     update();
-    d_ptr->released = true;
-
-    d_ptr->velocity = qBound(-d_ptr->maximumSpeed, d_ptr->velocity, d_ptr->maximumSpeed);
-
-    if (!d_ptr->ticker.isActive())
-        d_ptr->ticker.start();
 }
 
 void KineticModel::update()

@@ -38,8 +38,7 @@ class KineticModelPrivate;
 class KineticModel: public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(qreal maximumSpeed READ maximumSpeed WRITE setMaximumSpeed)
-    Q_PROPERTY(qreal deacceleration READ deacceleration WRITE setDeacceleration)
+    Q_PROPERTY(int duration READ duration WRITE setDuration)
     Q_PROPERTY(qreal position READ position WRITE setPosition)
     Q_PROPERTY(int updateInterval READ updateInterval WRITE setUpdateInterval)
 
@@ -47,16 +46,14 @@ public:
     KineticModel(QObject *parent = 0);
     ~KineticModel();
 
-    qreal maximumSpeed() const;
-    qreal deacceleration() const;
-    int updateInterval() const;
+    int duration() const;
     qreal position() const;
+    int updateInterval() const;
 
 public slots:
-    void setMaximumSpeed(qreal speed);
-    void setDeacceleration(qreal deacceleration);
-    void setUpdateInterval(int ms);
+    void setDuration(int ms);
     void setPosition(qreal pos);
+    void setUpdateInterval(int ms);
     void resetSpeed();
     void release();
 
