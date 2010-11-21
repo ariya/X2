@@ -5,9 +5,11 @@
 <script>
 window.addEventListener("load", function () {
     window.setTimeout(function () {
+
+        // Hide the address bar on Android
         window.scrollTo(0, 1);
 
-        var refPos = 0, offset = 0, el, maxofs, vertical;
+        var pressed = false, refPos = 0, offset = 0, el, maxofs, vertical;
 
         el = document.getElementById('container');
         maxofs = window.getComputedStyle(el).height.replace('px', '');
@@ -26,6 +28,34 @@ window.addEventListener("load", function () {
                 e.stopPropagation();
                 vertical.resetSpeed();
             }
+        });
+
+        el.addEventListener('mousemove', function (e) {
+            if (pressed) {
+                var delta = refPos - e.clientY;
+                if (delta > 2 || delta < -2) {
+                    offset += delta;
+                    refPos = e.clientY;
+                }
+                vertical.setPosition(offset);
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+
+        el.addEventListener('mouseup', function (e) {
+            pressed = false;
+            vertical.release();
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        el.addEventListener('mousedown', function (e) {
+            pressed = true;
+            refPos = e.clientY;
+            e.preventDefault();
+            e.stopPropagation();
+            vertical.resetSpeed();
         });
 
         el.addEventListener('touchmove', function (e) {
@@ -47,6 +77,20 @@ window.addEventListener("load", function () {
             e.stopPropagation();
         });
 
+        if (true) {
+            // This is needed only for desktop browser, however
+            // we must give enough delay so that Android has the chance
+            // to hide the browser address bar.
+            var delay = 500;
+            window.setTimeout(function () {
+                document.querySelector('.app').style.height = '100%';
+                document.querySelector('.app').style.overflow = 'hidden';
+                el = document.getElementById('container');
+                vertical.maximum = window.getComputedStyle(el).height.replace('px', '') -
+                                   window.innerHeight;
+            }, delay);
+        }
+
     }, 0);
 
 }, false);
@@ -55,6 +99,7 @@ window.addEventListener("load", function () {
 body {
   margin: 0;
   padding: 0;
+  font-family: Helvetica, Arial;
 }
 
 * {
@@ -64,25 +109,25 @@ body {
   -webkit-text-size-adjust: none;
 }
 
-.scroll {
-  -webkit-box-flex: 1;
-  display: block;
-  position: relative;
-  overflow: hidden;
+.app {
   -webkit-backface-visibility: hidden;
-  font-family: Helvetica, Arial;
+}
+
+.scroll {
+  padding: 0.8em;
+  -webkit-backface-visibility: hidden;
+  -webkit-transform: translateY(0);
 }
 
 </style>
 </head>
 <body>
 
+<div class="app">
+
 <div class="scroll" id="container">
 
 <p style="text-align: center; padding: .5em; border: 1px #ccc solid">kinetic scrolling demo, by Ariya</p>
-
-<div style="padding: 0.8em">
-
 <h1>Frankenstein</h1>
 <h2>Mary Wollstonecraft (Godwin) Shelley</h2>
 
@@ -734,8 +779,6 @@ lineaments of his face are irradiated by the soul within.
 Strange and harrowing must be his story, frightful the storm which
 embraced the gallant vessel on its course and wrecked it&mdash;thus!
 </p>
-
-
 
 </div>
 
