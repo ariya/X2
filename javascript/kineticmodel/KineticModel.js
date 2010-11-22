@@ -107,6 +107,7 @@ var KineticModel = (function () {
             vstep = self.deacceleration * delta;
             if (self.velocity < vstep && self.velocity > -vstep) {
                 self.velocity = 0;
+                self.position = Math.round(self.position);
                 window.clearInterval(self.ticker);
                 self.ticker = null;
             } else {
