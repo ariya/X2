@@ -16,8 +16,8 @@ window.addEventListener("load", function () {
         maxofs -= window.innerHeight;
 
         vertical = new KineticModel(0, maxofs, function (y) {
-            var el = window.document.getElementById('container');
-            el.style.webkitTransform = 'translateY(-' + y + 'px)';
+            var s = window.document.getElementById('container').style;
+            s.webkitTransform = s.MozTransform = s.OTransform = 'translateY(-' + y + 'px)';
             offset = y;
         });
 
@@ -28,7 +28,7 @@ window.addEventListener("load", function () {
                 e.stopPropagation();
                 vertical.resetSpeed();
             }
-        });
+        }, false);
 
         el.addEventListener('mousemove', function (e) {
             if (pressed) {
@@ -41,14 +41,14 @@ window.addEventListener("load", function () {
                 e.preventDefault();
                 e.stopPropagation();
             }
-        });
+        }, false);
 
         el.addEventListener('mouseup', function (e) {
             pressed = false;
             vertical.release();
             e.preventDefault();
             e.stopPropagation();
-        });
+        }, false);
 
         el.addEventListener('mousedown', function (e) {
             pressed = true;
@@ -56,7 +56,7 @@ window.addEventListener("load", function () {
             e.preventDefault();
             e.stopPropagation();
             vertical.resetSpeed();
-        });
+        }, false);
 
         el.addEventListener('touchmove', function (e) {
             if (e.targetTouches.length >= 1) {
@@ -69,13 +69,13 @@ window.addEventListener("load", function () {
                 e.preventDefault();
                 e.stopPropagation();
             }
-        });
+        }, false);
 
         el.addEventListener('touchend', function (e) {
             vertical.release();
             e.preventDefault();
             e.stopPropagation();
-        });
+        }, false);
 
         if (true) {
             // This is needed only for desktop browser, however
