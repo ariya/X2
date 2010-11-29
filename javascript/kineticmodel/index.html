@@ -21,74 +21,71 @@ window.addEventListener("load", function () {
             offset = y;
         });
 
-        el.addEventListener('touchstart', function (e) {
-            if (e.targetTouches.length >= 1) {
-                refPos = e.targetTouches[0].clientY;
+        if ('ontouchstart' in window) {
+
+            el.addEventListener('touchstart', function (e) {
+                if (e.targetTouches.length >= 1) {
+                    refPos = e.targetTouches[0].clientY;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    vertical.resetSpeed();
+                }
+            }, false);
+
+            el.addEventListener('touchmove', function (e) {
+                if (e.targetTouches.length >= 1) {
+                    var delta = refPos - e.targetTouches[0].clientY;
+                    if (delta > 2 || delta < -2) {
+                        offset += delta;
+                        refPos = e.targetTouches[0].clientY;
+                    }
+                    vertical.setPosition(offset);
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, false);
+
+            el.addEventListener('touchend', function (e) {
+                vertical.release();
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+
+        } else {
+
+            el.addEventListener('mousemove', function (e) {
+                if (pressed) {
+                    var delta = refPos - e.clientY;
+                    if (delta > 2 || delta < -2) {
+                        offset += delta;
+                        refPos = e.clientY;
+                    }
+                    vertical.setPosition(offset);
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, false);
+
+            el.addEventListener('mouseup', function (e) {
+                pressed = false;
+                vertical.release();
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+
+            el.addEventListener('mousedown', function (e) {
+                pressed = true;
+                refPos = e.clientY;
                 e.preventDefault();
                 e.stopPropagation();
                 vertical.resetSpeed();
-            }
-        }, false);
+            }, false);
 
-        el.addEventListener('mousemove', function (e) {
-            if (pressed) {
-                var delta = refPos - e.clientY;
-                if (delta > 2 || delta < -2) {
-                    offset += delta;
-                    refPos = e.clientY;
-                }
-                vertical.setPosition(offset);
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        }, false);
-
-        el.addEventListener('mouseup', function (e) {
-            pressed = false;
-            vertical.release();
-            e.preventDefault();
-            e.stopPropagation();
-        }, false);
-
-        el.addEventListener('mousedown', function (e) {
-            pressed = true;
-            refPos = e.clientY;
-            e.preventDefault();
-            e.stopPropagation();
-            vertical.resetSpeed();
-        }, false);
-
-        el.addEventListener('touchmove', function (e) {
-            if (e.targetTouches.length >= 1) {
-                var delta = refPos - e.targetTouches[0].clientY;
-                if (delta > 2 || delta < -2) {
-                    offset += delta;
-                    refPos = e.targetTouches[0].clientY;
-                }
-                vertical.setPosition(offset);
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        }, false);
-
-        el.addEventListener('touchend', function (e) {
-            vertical.release();
-            e.preventDefault();
-            e.stopPropagation();
-        }, false);
-
-        if (true) {
-            // This is needed only for desktop browser, however
-            // we must give enough delay so that Android has the chance
-            // to hide the browser address bar.
-            var delay = 500;
-            window.setTimeout(function () {
-                document.querySelector('.app').style.height = '100%';
-                document.querySelector('.app').style.overflow = 'hidden';
-                el = document.getElementById('container');
-                vertical.maximum = window.getComputedStyle(el).height.replace('px', '') -
+            document.querySelector('.app').style.height = '100%';
+            document.querySelector('.app').style.overflow = 'hidden';
+            el = document.getElementById('container');
+            vertical.maximum = window.getComputedStyle(el).height.replace('px', '') -
                                    window.innerHeight;
-            }, delay);
         }
 
     }, 0);
