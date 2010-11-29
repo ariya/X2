@@ -37,10 +37,11 @@ var KineticModel = (function () {
         this.maximum = max;
 
         this.released = false;
-        this.duration = 1403;
+        this.duration = 1901;
         this.position = 0;
         this.velocity = 0;
         this.deacceleration = 0;
+        this.speedThreshold = 0;
 
         this.timestamp = Date.now();
         this.lastPosition = 0;
@@ -85,6 +86,7 @@ var KineticModel = (function () {
     {
         this.released = true;
         this.deacceleration = Math.abs(this.velocity * 1000 / this.duration);
+        this.speedThreshold = this.velocity * 0.3;
         this.triggerUpdate(this.update);
     };
 
@@ -105,6 +107,10 @@ var KineticModel = (function () {
             self.position = Math.min(self.position, self.maximum);
             self.position = Math.max(self.position, self.minimum);
             vstep = self.deacceleration * delta;
+            if (self.velocity > self.speedThreshold ||
+                self.velocity < -self.speedThreshold) {
+                vstep = 4 * vstep;
+            }
             if (self.velocity < vstep && self.velocity > -vstep) {
                 self.velocity = 0;
                 self.position = Math.round(self.position);
