@@ -86,7 +86,7 @@ var KineticModel = (function () {
     {
         this.released = true;
         this.deacceleration = Math.abs(this.velocity * 1000 / this.duration);
-        this.speedThreshold = this.velocity * 0.3;
+        this.speedThreshold = Math.abs(this.velocity * 0.3);
         this.triggerUpdate(this.update);
     };
 
