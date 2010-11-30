@@ -95,7 +95,7 @@ var KineticModel = (function () {
         var elapsed, delta, vstep, lastSpeed, currentSpeed;
 
         elapsed = Date.now() -  self.timestamp;
-        if (isNaN(elapsed) || elapsed < 5) {
+        if (isNaN(elapsed) || elapsed < self.updateInterval - 1) {
             return;
         }
 
@@ -123,8 +123,10 @@ var KineticModel = (function () {
         } else {
             lastSpeed = self.velocity;
             currentSpeed = (self.position - self.lastPosition) / delta;
-            self.velocity = 0.23 * lastSpeed + 0.77 * currentSpeed;
-            self.lastPosition = self.position;
+            if (currentSpeed > 1 || currentSpeed < -1) {
+                self.velocity = 0.2 * lastSpeed + 0.8 * currentSpeed;
+                self.lastPosition = self.position;
+            }
         }
     };
 
