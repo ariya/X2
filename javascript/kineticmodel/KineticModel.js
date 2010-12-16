@@ -31,101 +31,96 @@ var KineticModel = (function () {
 
     KineticModel = function (min, max, handler)
     {
-        this.ticker = null;
-
         this.minimum = min;
         this.maximum = max;
-
-        this.released = false;
-        this.duration = 1901;
+        this.duration = 3300;
         this.position = 0;
-        this.velocity = 0;
-        this.deacceleration = 0;
-        this.speedThreshold = 0;
-
-        this.timestamp = Date.now();
-        this.lastPosition = 0;
         this.updateInterval = 15;
 
-        this.callback = handler;
+        this.state = {
+            ticker: null,
+            velocity: 0,
+            deacceleration: 0,
+            lastPosition: 0,
+            timestamp: Date.now(),
+            callback: handler,
+            releaseT: null,
+            thresholdV: 0,
+            slowdown: false
+        };
     };
 
-    KineticModel.prototype.setPosition = function (pos)
-    {
-        this.released = false;
-        if (pos === this.position) {
-            return;
-        }
+    KineticModel.prototype = {
 
-        this.position = pos;
-        this.position = Math.min(this.position, this.maximum);
-        this.position = Math.max(this.position, this.minimum);
+        clamped: function (pos) {
+            return (pos > this.maximum) ? this.maximum :
+                (pos < this.minimum) ? this.minimum: pos;
+        },
 
-        this.callback(this.position);
-        this.update(this);
-        this.triggerUpdate(this.update);
-    };
-
-    KineticModel.prototype.triggerUpdate = function (f)
-    {
-        if (this.ticker === null) {
+        setPosition: function (pos) {
             var self = this;
-            this.ticker = window.setInterval(function () {
-                f(self);
-            }, this.updateInterval);
-        }
-    };
-
-    KineticModel.prototype.resetSpeed = function ()
-    {
-        this.velocity = 0;
-        this.lastPosition = this.position;
-    };
-
-    KineticModel.prototype.release = function ()
-    {
-        this.released = true;
-        this.deacceleration = Math.abs(this.velocity * 1000 / this.duration);
-        this.speedThreshold = Math.abs(this.velocity * 0.3);
-        this.triggerUpdate(this.update);
-    };
-
-    KineticModel.prototype.update = function (self)
-    {
-        var elapsed, delta, vstep, lastSpeed, currentSpeed;
-
-        elapsed = Date.now() -  self.timestamp;
-        if (isNaN(elapsed) || elapsed < self.updateInterval - 1) {
-            return;
-        }
-
-        self.timestamp = Date.now();
-        delta = elapsed / 1000;
-
-        if (self.released) {
-            self.position += (self.velocity * delta);
-            self.position = Math.min(self.position, self.maximum);
-            self.position = Math.max(self.position, self.minimum);
-            vstep = self.deacceleration * delta;
-            if (self.velocity > self.speedThreshold ||
-                self.velocity < -self.speedThreshold) {
-                vstep = 4 * vstep;
+            this.state.releaseT = null;
+            this.position = this.clamped(pos);
+            this.state.callback(this.position);
+            if (this.state.ticker === null) {
+                this.state.ticker = window.setInterval(function () {
+                    var s = self.state,
+                        elapsed = Date.now() - s.timestamp,
+                        v = (self.position - s.lastPosition) * 1000 / elapsed;
+                    if ((s.releaseT === null) && elapsed >= self.updateInterval) {
+                        s.timestamp = Date.now();
+                        if (v > 1 || v < -1) {
+                            s.velocity = 0.2 * (s.velocity) + 0.8 * v;
+                            s.lastPosition = self.position;
+                        }
+                    }
+                }, this.updateInterval);
             }
-            if (self.velocity < vstep && self.velocity > -vstep) {
-                self.velocity = 0;
-                self.position = Math.round(self.position);
-                window.clearInterval(self.ticker);
-                self.ticker = null;
-            } else {
-                self.velocity += (self.velocity < 0) ? vstep : -vstep;
-            }
-            self.callback(self.position);
-        } else {
-            lastSpeed = self.velocity;
-            currentSpeed = (self.position - self.lastPosition) / delta;
-            if (currentSpeed > 1 || currentSpeed < -1) {
-                self.velocity = 0.2 * lastSpeed + 0.8 * currentSpeed;
-                self.lastPosition = self.position;
+        },
+
+        resetSpeed: function () {
+            var s = this.state;
+            s.releaseT = null;
+            s.velocity = 0;
+            s.lastPosition = this.position;
+            window.clearInterval(s.ticker);
+            s.ticker = null;
+        },
+
+        release: function () {
+            var s = this.state,
+                self = this;
+            window.clearInterval(s.ticker);
+            s.ticker = null;
+            if (s.velocity > 1 || s.velocity < -1) {
+                s.releaseT = Date.now();
+                s.timestamp = s.releaseT;
+                s.deacceleration = 3200 * s.velocity / this.duration;
+                s.thresholdV = Math.abs(0.33 * s.velocity);
+                s.slowdown = false;
+                window.clearInterval(s.ticker);
+                s.ticker = window.setInterval(function () {
+                    var s = self.state,
+                        now = Date.now(),
+                        elapsed = now - s.releaseT,
+                        delta = (now - s.timestamp) / 1000,
+                        vstep = s.deacceleration * delta,
+                        oldv = s.velocity;
+                    if (s.releaseT !== null) {
+                        s.timestamp = now;
+                        self.position = self.clamped(self.position + s.velocity * delta);
+                        if (!s.slowdown && (Math.abs(s.velocity) < s.thresholdV)) {
+                            s.slowdown = true;
+                            s.deacceleration /= 8;
+                            vstep = s.deacceleration * delta;
+                        }
+                        s.velocity = oldv - vstep;
+                        if ((s.velocity < 0 && oldv > 0) || (s.velocity > 0 && oldv < 0) || (elapsed > self.duration)) {
+                            self.resetSpeed();
+                        }
+                        s.callback(self.position);
+                    }
+                }, this.updateInterval);
             }
         }
     };
