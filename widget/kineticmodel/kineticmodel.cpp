@@ -164,7 +164,7 @@ void KineticModel::update()
     } else {
         qreal lastSpeed = d->velocity;
         qreal currentSpeed = (d->position - d->lastPosition) / delta;
-        d->velocity = .75 * lastSpeed + .25 * currentSpeed;
+        d->velocity = .2 * lastSpeed + .8 * currentSpeed;
         d->lastPosition = d->position;
     }
 
