@@ -148,10 +148,10 @@ void KineticModel::update()
 {
     Q_D(KineticModel);
 
-    int elapsed = d_ptr->timestamp.elapsed();
+    int elapsed = d->timestamp.elapsed();
 
     // too fast gives less accuracy
-    if (elapsed < 5)
+    if (elapsed < d->ticker.interval() / 2)
         return;
 
     qreal delta = static_cast<qreal>(elapsed) / 1000.0;
