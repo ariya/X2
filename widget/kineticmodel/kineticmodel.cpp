@@ -116,8 +116,13 @@ void KineticModel::setUpdateInterval(int ms)
 
 void KineticModel::resetSpeed()
 {
-    d_ptr->velocity = 0;
-    d_ptr->lastPosition = d_ptr->position;
+    Q_D(KineticModel);
+
+    d->released = false;
+    d->ticker.stop();
+    d->lastPosition = d->position;
+    d->timestamp.start();
+    d->velocity = 0;
 }
 
 void KineticModel::release()
