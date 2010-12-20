@@ -135,10 +135,13 @@ void KineticModel::release()
     if (d->deacceleration < 0)
         d->deacceleration = -d->deacceleration;
 
-    if (!d->ticker.isActive())
-        d->ticker.start();
-
-    update();
+    if (d->deacceleration > 0.5) {
+        if (!d->ticker.isActive())
+            d->ticker.start();
+        update();
+    } else {
+        d->ticker.stop();
+    }
 }
 
 void KineticModel::update()
