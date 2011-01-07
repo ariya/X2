@@ -16,21 +16,17 @@ if (!fs.exists(compiler)) {
 var loadFile = function(fname)
 {
     var content = '',
-        f;
+        f, s;
 
-    if (fs.exists(fname)) {
-        try {
-            f = fs.open(fname, 'r');
-            while (true) {
-                content += f.next();
-                content += '\n';
-            }
+    f = fs.open(fname, 'r');
+    while (true) {
+        s = f.readLine();
+        if (s.length === 0) {
+            break;
         }
-        catch (e) { } // EOF exception
-        finally {
-            f.close();
-        }
+        content += s;
     }
+    f.close();
 
     return content;
 };
