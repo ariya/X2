@@ -21,6 +21,7 @@
             function onMouseDown(event)
             {
                 drawing = true;
+                draw();
             }
 
             function onMouseUp(event)
@@ -30,7 +31,6 @@
 
             function draw()
             {
-                timer = setTimeout(draw, 10);
                 if (!drawing)
                     return;
                 var elementIndex = Math.floor(Math.random() * elements.length);
@@ -49,6 +49,7 @@
                         elementY - element.bounds.height / 2 + scale,
                         element.bounds.width * scale, element.bounds.height * scale);
                 canvasContext.restore();
+                setTimeout(draw, 10);
             }
             
             window.onload = function()
