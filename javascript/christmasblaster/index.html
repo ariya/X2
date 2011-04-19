@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+    <head>
+        <title>svg2code - test</title>
+        <script type="text/javascript" src="graphics.js"></script>
+        <script type="text/javascript">
+            var mouseX = 0;
+            var mouseY = 0;
+            var drawing = false;
+            var canvasContext = null;
+            var elements = [];
+            for (var i in graphics_elements)
+                elements.push(graphics_elements[i].id);
+
+            function onMouseMove(event)
+            {
+                mouseX = event.offsetX;
+                mouseY = event.offsetY;
+            }
+
+            function onMouseDown(event)
+            {
+                drawing = true;
+            }
+
+            function onMouseUp(event)
+            {
+                drawing = false;
+            }
+
+            function draw()
+            {
+                timer = setTimeout(draw, 10);
+                if (!drawing)
+                    return;
+                var elementIndex = Math.floor(Math.random() * elements.length);
+                var element = graphics_elements[elements[elementIndex]];
+                var distance = Math.random() * 200; // disatance from element center to mouse
+                var angle = Math.random() * 360; // angle of line through mouse and element center
+                var scale = 0.4 + Math.random() * 0.6;
+                var elementX = Math.cos(angle) * distance + mouseX;
+                var elementY = Math.sin(angle) * distance + mouseY;
+                canvasContext.save();
+                canvasContext.translate(elementX, elementY);
+                canvasContext.rotate(Math.random() * 360);
+                canvasContext.translate(-elementX, -elementY);
+                graphics_draw(canvasContext, element.id,
+                        elementX - element.bounds.width / 2 * scale,
+                        elementY - element.bounds.height / 2 + scale,
+                        element.bounds.width * scale, element.bounds.height * scale);
+                canvasContext.restore();
+            }
+            
+            window.onload = function()
+            {
+                var canvas = document.getElementById('canvas');
+                canvas.addEventListener('mousemove', onMouseMove, false);
+                canvas.addEventListener('mousedown', onMouseDown, false);
+                canvas.addEventListener('mouseup', onMouseUp, false);
+                canvas.addEventListener('mouseout', onMouseUp, false);
+                canvasContext = canvas.getContext('2d');
+                canvasContext.fillStyle = "#000";
+                canvasContext.fillRect(0, 0, canvas.width, canvas.height);
+                draw();
+            }
+        </script>
+    </head>
+    <body>
+        <canvas id="canvas" width="1000" height="800">
+            Your browser does not support HTML5 Canvas.
+        </canvas>
+    </body>
+</html>
