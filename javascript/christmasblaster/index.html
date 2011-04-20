@@ -7,10 +7,21 @@
             var mouseX = 0;
             var mouseY = 0;
             var drawing = false;
+            var canvas = null;
             var canvasContext = null;
             var elements = [];
             for (var i in graphics_elements)
                 elements.push(graphics_elements[i].id);
+            var flakes = [
+                { file: "flake1.png" },
+                { file: "flake2.png" },
+                { file: "flake3.png" },
+                { file: "flake4.png" }
+            ];
+            for (var i in flakes) {
+                flakes[i].image = new Image();
+                flakes[i].image.src = flakes[i].file;
+            }
 
             function onMouseMove(event)
             {
@@ -31,6 +42,11 @@
 
             function draw()
             {
+                var flakeImage = flakes[Math.floor(Math.random() * flakes.length)].image;
+                canvasContext.drawImage(flakeImage,
+                                        Math.random() * (canvas.width + 2 * flakeImage.width) - flakeImage.width,
+                                        Math.random() * (canvas.height + 2 * flakeImage.height) - flakeImage.height);
+                setTimeout(draw, 50);
                 if (!drawing)
                     return;
                 var elementIndex = Math.floor(Math.random() * elements.length);
@@ -49,12 +65,11 @@
                         elementY - element.bounds.height / 2 + scale,
                         element.bounds.width * scale, element.bounds.height * scale);
                 canvasContext.restore();
-                setTimeout(draw, 10);
             }
-            
+
             window.onload = function()
             {
-                var canvas = document.getElementById('canvas');
+                canvas = document.getElementById('canvas');
                 canvas.addEventListener('mousemove', onMouseMove, false);
                 canvas.addEventListener('mousedown', onMouseDown, false);
                 canvas.addEventListener('mouseup', onMouseUp, false);
