@@ -32,7 +32,6 @@
             function onMouseDown(event)
             {
                 drawing = true;
-                draw();
             }
 
             function onMouseUp(event)
@@ -46,7 +45,7 @@
                 canvasContext.drawImage(flakeImage,
                                         Math.random() * (canvas.width + 2 * flakeImage.width) - flakeImage.width,
                                         Math.random() * (canvas.height + 2 * flakeImage.height) - flakeImage.height);
-                setTimeout(draw, 50);
+                setTimeout(draw, 20);
                 if (!drawing)
                     return;
                 var elementIndex = Math.floor(Math.random() * elements.length);
