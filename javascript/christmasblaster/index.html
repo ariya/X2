@@ -51,9 +51,9 @@
                     return;
                 var elementIndex = Math.floor(Math.random() * elements.length);
                 var element = graphics_elements[elements[elementIndex]];
-                var distance = Math.random() * 200; // disatance from element center to mouse
+                var distance = Math.random() * 120; // distance from element center to mouse
                 var angle = Math.random() * 360; // angle of line through mouse and element center
-                var scale = 0.4 + Math.random() * 0.6;
+                var scale = 0.4 + Math.random() * 0.4;
                 var elementX = Math.cos(angle) * distance + mouseX;
                 var elementY = Math.sin(angle) * distance + mouseY;
                 canvasContext.save();
@@ -62,7 +62,7 @@
                 canvasContext.translate(-elementX, -elementY);
                 graphics_draw(canvasContext, element.id,
                         elementX - element.bounds.width / 2 * scale,
-                        elementY - element.bounds.height / 2 + scale,
+                        elementY - element.bounds.height / 2 * scale,
                         element.bounds.width * scale, element.bounds.height * scale);
                 canvasContext.restore();
             }
