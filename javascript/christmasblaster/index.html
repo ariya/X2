@@ -43,8 +43,8 @@
             {
                 var flakeImage = flakes[Math.floor(Math.random() * flakes.length)].image;
                 canvasContext.drawImage(flakeImage,
-                                        Math.random() * (canvas.width + 2 * flakeImage.width) - flakeImage.width,
-                                        Math.random() * (canvas.height + 2 * flakeImage.height) - flakeImage.height);
+                                        Math.round(Math.random() * (canvas.width + 2 * flakeImage.width) - flakeImage.width),
+                                        Math.round(Math.random() * (canvas.height + 2 * flakeImage.height) - flakeImage.height));
                 setTimeout(draw, 20);
                 if (!drawing)
                     return;
