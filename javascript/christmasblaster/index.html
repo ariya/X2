@@ -2,6 +2,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
     <head>
         <title>svg2code - test</title>
+        <style type="text/css">
+            body { margin: 0; overflow: hidden; }
+        </style>
         <script type="text/javascript" src="graphics.js"></script>
         <script type="text/javascript">
             var mouseX = 0;
@@ -41,10 +44,13 @@
 
             function draw()
             {
-                var flakeImage = flakes[Math.floor(Math.random() * flakes.length)].image;
-                canvasContext.drawImage(flakeImage,
-                                        Math.round(Math.random() * (canvas.width + 2 * flakeImage.width) - flakeImage.width),
-                                        Math.round(Math.random() * (canvas.height + 2 * flakeImage.height) - flakeImage.height));
+                var flakesPerDraw = Math.ceil(canvas.width * canvas.height / 800000.0);
+                for (var i = 0; i < flakesPerDraw; i++) {
+                    var flakeImage = flakes[Math.floor(Math.random() * flakes.length)].image;
+                    canvasContext.drawImage(flakeImage,
+                                            Math.round(Math.random() * (canvas.width + 2 * flakeImage.width) - flakeImage.width),
+                                            Math.round(Math.random() * (canvas.height + 2 * flakeImage.height) - flakeImage.height));
+                }
                 setTimeout(draw, 20);
                 if (!drawing)
                     return;
@@ -65,23 +71,35 @@
                         element.bounds.width * scale, element.bounds.height * scale);
                 canvasContext.restore();
             }
+            
+            function fitToWindow()
+            {
+                canvas.height = window.innerHeight;
+                canvas.width = window.innerWidth;
+                canvasContext.fillStyle = "#000";
+                canvasContext.fillRect(0, 0, canvas.width, canvas.height);
+            }
 
             window.onload = function()
             {
                 canvas = document.getElementById('canvas');
+                canvasContext = canvas.getContext('2d');
+                fitToWindow();
                 canvas.addEventListener('mousemove', onMouseMove, false);
                 canvas.addEventListener('mousedown', onMouseDown, false);
                 canvas.addEventListener('mouseup', onMouseUp, false);
                 canvas.addEventListener('mouseout', onMouseUp, false);
-                canvasContext = canvas.getContext('2d');
-                canvasContext.fillStyle = "#000";
-                canvasContext.fillRect(0, 0, canvas.width, canvas.height);
                 draw();
+            }
+
+            window.onresize = function()
+            {
+                fitToWindow();
             }
         </script>
     </head>
     <body>
-        <canvas id="canvas" width="1000" height="800">
+        <canvas id="canvas" width="10" height="10">
             Your browser does not support HTML5 Canvas.
         </canvas>
     </body>
