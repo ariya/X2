@@ -1291,4 +1291,227 @@
        y="0"
        x="0" />
   </g>
+  <g
+     id="g4171"
+     inkscape:export-filename="128.png"
+     inkscape:export-xdpi="90"
+     inkscape:export-ydpi="90">
+    <rect
+       y="0"
+       x="604"
+       height="128"
+       width="128"
+       id="rect3125"
+       style="opacity:0;fill:#000000;fill-opacity:0.58039216;stroke:none" />
+    <use
+       height="600"
+       width="600"
+       transform="matrix(0.40023959,0.05836716,-0.05836716,0.40023959,565.08408,-61.108338)"
+       id="use3145"
+       xlink:href="#branch"
+       y="0"
+       x="0" />
+    <use
+       height="600"
+       width="600"
+       transform="matrix(0.36973544,-0.0466555,0.0466555,0.36973544,515.82104,68.368787)"
+       id="use3133"
+       xlink:href="#flower1"
+       y="0"
+       x="0" />
+    <use
+       height="600"
+       width="600"
+       transform="matrix(0.34679361,-0.05798677,0.05798677,0.34679361,571.15456,-92.40551)"
+       id="use3139"
+       xlink:href="#flower2"
+       y="0"
+       x="0" />
+    <use
+       height="600"
+       width="600"
+       transform="matrix(0.17040412,0,0,0.17040412,540.54065,-11.1736)"
+       id="use3135"
+       xlink:href="#star1"
+       y="0"
+       x="0" />
+    <use
+       height="600"
+       width="600"
+       transform="matrix(0.22825472,0,0,0.22825472,662.85053,-76.243108)"
+       id="use3141"
+       xlink:href="#star2"
+       y="0"
+       x="0" />
+    <use
+       height="600"
+       width="600"
+       transform="matrix(0.32828779,0.08796445,-0.08796445,0.32828779,658.521,15.59012)"
+       id="use3143"
+       xlink:href="#gingerbread2"
+       y="0"
+       x="0" />
+    <use
+       height="600"
+       width="600"
+       transform="matrix(0.3686651,-0.05447087,0.05447087,0.3686651,444.89115,-75.484965)"
+       id="use3151"
+       xlink:href="#gingerbread1"
+       y="0"
+       x="0" />
+    <image
+       sodipodi:absref="C:\ownprojects\x2\javascript\christmasblaster\flake1.png"
+       xlink:href="flake1.png"
+       width="13"
+       height="13"
+       id="image3167"
+       x="679"
+       y="74.5" />
+    <image
+       sodipodi:absref="C:\ownprojects\x2\javascript\christmasblaster\flake2.png"
+       xlink:href="flake2.png"
+       width="13"
+       height="13"
+       id="image3178"
+       x="669"
+       y="81" />
+    <image
+       sodipodi:absref="C:\ownprojects\x2\javascript\christmasblaster\flake3.png"
+       xlink:href="flake3.png"
+       width="15"
+       height="15"
+       id="image3189"
+       x="710"
+       y="72" />
+    <image
+       sodipodi:absref="C:\ownprojects\x2\javascript\christmasblaster\flake4.png"
+       xlink:href="flake4.png"
+       inkscape:export-ydpi="90"
+       inkscape:export-xdpi="90"
+       width="15"
+       height="15"
+       id="image3200"
+       x="697"
+       y="100" />
+    <use
+       height="600"
+       width="600"
+       transform="translate(22,-10)"
+       id="use3203"
+       xlink:href="#image3167"
+       y="0"
+       x="0" />
+    <use
+       height="600"
+       width="600"
+       transform="translate(-5,6)"
+       id="use3205"
+       xlink:href="#image3178"
+       y="0"
+       x="0" />
+    <use
+       height="600"
+       width="600"
+       transform="translate(-31,33)"
+       id="use3207"
+       xlink:href="#image3189"
+       y="0"
+       x="0" />
+    <use
+       height="600"
+       width="600"
+       transform="translate(-16,-33)"
+       id="use3209"
+       xlink:href="#image3200"
+       y="0"
+       x="0" />
+    <use
+       height="600"
+       width="600"
+       transform="translate(9,18)"
+       id="use3211"
+       xlink:href="#image3167"
+       y="0"
+       x="0" />
+    <use
+       height="600"
+       width="600"
+       transform="translate(30,0)"
+       id="use3213"
+       xlink:href="#image3178"
+       y="0"
+       x="0" />
+    <use
+       height="600"
+       width="600"
+       transform="translate(-27,13)"
+       id="use3215"
+       xlink:href="#image3189"
+       y="0"
+       x="0" />
+    <use
+       height="600"
+       width="600"
+       transform="translate(-43,-19)"
+       id="use3217"
+       xlink:href="#image3200"
+       y="0"
+       x="0" />
+    <use
+       height="600"
+       width="600"
+       transform="translate(-37,35.5)"
+       id="use3219"
+       xlink:href="#use3203"
+       y="0"
+       x="0" />
+    <use
+       height="600"
+       width="600"
+       transform="translate(38,0)"
+       id="use3221"
+       xlink:href="#use3205"
+       y="0"
+       x="0" />
+    <use
+       height="600"
+       width="600"
+       transform="translate(1,-12)"
+       id="use3223"
+       xlink:href="#use3207"
+       y="0"
+       x="0" />
+    <use
+       height="600"
+       width="600"
+       transform="translate(16,1)"
+       id="use3225"
+       xlink:href="#use3209"
+       y="0"
+       x="0"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+  </g>
+  <g
+     id="g4381"
+     transform="translate(-1,0)"
+     inkscape:export-filename="16.png"
+     inkscape:export-xdpi="90"
+     inkscape:export-ydpi="90">
+    <use
+       height="600"
+       width="600"
+       transform="matrix(0.14027291,0,0,0.14027291,565.82208,107.83926)"
+       id="use3137"
+       xlink:href="#gingerbread1"
+       y="0"
+       x="0" />
+    <rect
+       y="157"
+       x="625"
+       height="16"
+       width="16"
+       id="rect4377"
+       style="opacity:0;fill:#000000;fill-opacity:0.58039216;stroke:none" />
+  </g>
 </svg>

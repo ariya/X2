@@ -1,0 +1,17 @@
+{
+  "name": "Christmas Blaster",
+  "description": "Create a christmas decoration while the snow falls",
+  "version": "1",
+  "app": {
+    "urls": [
+      "http://www.casaportale.de/christmasblaster"
+    ],
+    "launch": {
+      "local_path": "index.html"
+    }
+  },
+  "icons": {
+    "16": "16.png",
+    "128": "128.png"
+  }
+}
