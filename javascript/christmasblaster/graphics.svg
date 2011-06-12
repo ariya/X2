@@ -1494,16 +1494,16 @@
   </g>
   <g
      id="g4381"
-     transform="translate(-1,0)"
+     transform="matrix(1,0,0,-1,-1,330)"
      inkscape:export-filename="16.png"
      inkscape:export-xdpi="90"
      inkscape:export-ydpi="90">
     <use
        height="600"
        width="600"
-       transform="matrix(0.14027291,0,0,0.14027291,565.82208,107.83926)"
+       transform="matrix(0.1142043,0,0,0.1142043,620.45172,141.91364)"
        id="use3137"
-       xlink:href="#gingerbread1"
+       xlink:href="#gingerbread2"
        y="0"
        x="0" />
     <rect
