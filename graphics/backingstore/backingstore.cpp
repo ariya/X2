@@ -31,6 +31,9 @@
 
 const int TileDim = 128;
 
+const qreal MinZoom = 0.2;
+const qreal MaxZoom = 20;
+
 #ifdef TILE_DEBUG
 const int UpdateDelay = 100;
 const int RefreshDelay = 600;
@@ -230,8 +233,10 @@ protected:
     void paintGL();
     void resizeGL(int width, int height);
     void timerEvent(QTimerEvent *event);
+    void mouseDoubleClickEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
+    void mouseZoom(qreal oldZoom, QPoint pos);
     void wheelEvent(QWheelEvent *event);
 
 private:
@@ -459,6 +464,16 @@ void GLTiger::timerEvent(QTimerEvent *event)
         refreshBackingStore();
 }
 
+void GLTiger::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    qreal oldZoom = m_viewZoomFactor;
+    qreal scale = (event->modifiers() & Qt::ControlModifier) ? 0.5 : 2.0;
+    m_viewZoomFactor = qBound(MinZoom, m_viewZoomFactor * scale, MaxZoom);
+
+    mouseZoom(oldZoom, event->pos());
+    update();
+}
+
 void GLTiger::mousePressEvent(QMouseEvent *event)
 {
     if (event->buttons() & Qt::LeftButton)
@@ -474,21 +489,22 @@ void GLTiger::mouseMoveEvent(QMouseEvent *event)
     }
 }
 
-void GLTiger::wheelEvent(QWheelEvent *event)
+void GLTiger::mouseZoom(qreal oldZoom, QPoint pos)
 {
-    const qreal minZoom = 0.2;
-    const qreal maxZoom = 20;
-
-    qreal oldZoom = m_viewZoomFactor;
-    qreal dz = event->delta() / 100.0f;
-    m_viewZoomFactor = qBound(minZoom, m_viewZoomFactor + dz, maxZoom);
-
     // We center the zooming relative to the mouse positions,
     // hence the translation before and after the scaling.
-    QPointF center = event->pos() - m_viewOffset;
+    QPointF center = pos - m_viewOffset;
     center *= (m_viewZoomFactor / oldZoom);
-    m_viewOffset = event->pos() - center;
+    m_viewOffset = pos - center;
+}
 
+void GLTiger::wheelEvent(QWheelEvent *event)
+{
+    qreal oldZoom = m_viewZoomFactor;
+    qreal dz = event->delta() / 100.0f;
+    m_viewZoomFactor = qBound(MinZoom, m_viewZoomFactor + dz, MaxZoom);
+
+    mouseZoom(oldZoom, event->pos());
     update();
 }
 
