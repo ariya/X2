@@ -236,7 +236,7 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
-    void mouseZoom(qreal oldZoom, QPoint pos);
+    void mouseZoom(qreal zoomFactor, QPoint pos);
     void wheelEvent(QWheelEvent *event);
 
 private:
@@ -466,12 +466,8 @@ void GLTiger::timerEvent(QTimerEvent *event)
 
 void GLTiger::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    qreal oldZoom = m_viewZoomFactor;
     qreal scale = (event->modifiers() & Qt::ControlModifier) ? 0.5 : 2.0;
-    m_viewZoomFactor = qBound(MinZoom, m_viewZoomFactor * scale, MaxZoom);
-
-    mouseZoom(oldZoom, event->pos());
-    update();
+    mouseZoom(m_viewZoomFactor * scale, event->pos());
 }
 
 void GLTiger::mousePressEvent(QMouseEvent *event)
@@ -489,23 +485,24 @@ void GLTiger::mouseMoveEvent(QMouseEvent *event)
     }
 }
 
-void GLTiger::mouseZoom(qreal oldZoom, QPoint pos)
+void GLTiger::mouseZoom(qreal zoomFactor, QPoint pos)
 {
+    qreal oldZoom = m_viewZoomFactor;
+    m_viewZoomFactor = qBound(MinZoom, zoomFactor, MaxZoom);
+
     // We center the zooming relative to the mouse positions,
     // hence the translation before and after the scaling.
     QPointF center = pos - m_viewOffset;
     center *= (m_viewZoomFactor / oldZoom);
     m_viewOffset = pos - center;
+
+    update();
 }
 
 void GLTiger::wheelEvent(QWheelEvent *event)
 {
-    qreal oldZoom = m_viewZoomFactor;
     qreal dz = event->delta() / 100.0f;
-    m_viewZoomFactor = qBound(MinZoom, m_viewZoomFactor + dz, MaxZoom);
-
-    mouseZoom(oldZoom, event->pos());
-    update();
+    mouseZoom(m_viewZoomFactor + dz, event->pos());
 }
 
 int main(int argc, char *argv[])
