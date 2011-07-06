@@ -21,6 +21,10 @@
 #include <QtOpenGL>
 #include <QtWebKit>
 
+#if QT_VERSION < QT_VERSION_CHECK(4, 7, 0)
+#error You need Qt 4.7 or newer
+#endif
+
 class WebView: public QGraphicsView
 {
 public:
@@ -41,6 +45,7 @@ WebView::WebView(QGraphicsScene *scene)
     , content(new QGraphicsWebView)
     , frameCount(0)
 {
+    setFrameStyle(QFrame::NoFrame);
     scene->addItem(content.data());
 
     content->resize(530, 800);
