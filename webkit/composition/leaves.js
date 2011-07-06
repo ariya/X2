@@ -63,7 +63,7 @@ Copyright (C) 2008 Apple Inc. All Rights Reserved.
 
 
 /* Define the number of leaves to be used in the animation */
-const NUMBER_OF_LEAVES = 30;
+const NUMBER_OF_LEAVES = 100;
 
 /* 
     Called when the "Falling Leaves" page is completely loaded.
