@@ -12,12 +12,14 @@
         <script type="text/javascript">
             var mouseX = 0;
             var mouseY = 0;
-            var drawing = false;
             var canvas = null;
             var canvasContext = null;
+            var spritesPerElement = 3;
             var elements = [];
-            for (var i in graphics_elements)
-                elements.push(graphics_elements[i].id);
+            var flakesPerDraw = 0;
+            var emitSpriteInterval = null;
+            var emitCount = 0;
+
             var flakes = [
                 { file: "flake1.png" },
                 { file: "flake2.png" },
@@ -39,62 +41,124 @@
             {
                 mouseX = event.clientX;
                 mouseY = event.clientY;
-                drawing = true;
+                emitElementSprite();
             }
 
             function onMouseUp(event)
             {
-                drawing = false;
+                window.clearInterval(emitSpriteInterval);
+                emitSpriteInterval = null;
             }
 
-            function draw()
+            function emitElementSprite()
             {
-                var flakesPerDraw = Math.ceil(canvas.width * canvas.height / 800000.0);
+                var elementIndex = emitCount % elements.length;
+                var spriteIndex = Math.floor(emitCount / elements.length) % spritesPerElement;
+                emitCount++;
+                var trailDistance = Math.random() * 50 + 100;
+                var trailAngle = Math.random() * 360;
+                var scale = 1 + Math.random() * 0.5;
+                var rotate = Math.random() * 180;
+                var elementX = Math.round(Math.cos(trailAngle) * trailDistance);
+                var elementY = Math.round(Math.sin(trailAngle) * trailDistance);
+                var sprite = graphics_elements[elements[elementIndex]].sprites[spriteIndex];
+                var spriteStyle = sprite.style;
+                var offsetX = Math.round(mouseX - sprite.width / 2);
+                var offsetY = Math.round(mouseY - sprite.height / 2);
+                spriteStyle.left = offsetX + 'px';
+                spriteStyle.top = offsetY + 'px';
+//                spriteStyle.webkitTransform = 'translate(' + elementX + 'px, ' + elementY + 'px) scale(' + scale + ') rotate(' + rotate + 'deg)';
+                spriteStyle.webkitTransform = 'translate(' + elementX + 'px, ' + elementY + 'px) rotate(' + rotate + 'deg)';
+                spriteStyle.webkitTransitionDuration = '0.7s';
+                spriteStyle.opacity = 1;
+                spriteStyle.zIndex = emitCount;
+                sprite.data = { elementX: elementX, offsetX: offsetX, elementY: elementY, offsetY: offsetY, scale: scale, rotate: rotate };
+                if (emitSpriteInterval == null)
+                    emitSpriteInterval = window.setInterval('emitElementSprite();', 50);
+            }
+
+            function drawFlakes()
+            {
                 for (var i = 0; i < flakesPerDraw; i++) {
                     var flakeImage = flakes[Math.floor(Math.random() * flakes.length)].image;
                     canvasContext.drawImage(flakeImage,
                                             Math.round(Math.random() * (canvas.width + 2 * flakeImage.width) - flakeImage.width),
                                             Math.round(Math.random() * (canvas.height + 2 * flakeImage.height) - flakeImage.height));
                 }
-                setTimeout(draw, 20);
-                if (!drawing)
-                    return;
-                var elementIndex = Math.floor(Math.random() * elements.length);
-                var element = graphics_elements[elements[elementIndex]];
-                var distance = Math.random() * 120; // distance from element center to mouse
-                var angle = Math.random() * 360; // angle of line through mouse and element center
-                var scale = 0.4 + Math.random() * 0.4;
-                var elementX = Math.cos(angle) * distance + mouseX;
-                var elementY = Math.sin(angle) * distance + mouseY;
-                canvasContext.save();
-                canvasContext.translate(elementX, elementY);
-                canvasContext.rotate(Math.random() * 360);
-                canvasContext.translate(-elementX, -elementY);
-                graphics_draw(canvasContext, element.id,
-                        elementX - element.bounds.width / 2 * scale,
-                        elementY - element.bounds.height / 2 * scale,
-                        element.bounds.width * scale, element.bounds.height * scale);
-                canvasContext.restore();
             }
-            
+
             function fitToWindow()
             {
                 canvas.height = window.innerHeight;
                 canvas.width = window.innerWidth;
                 canvasContext.fillStyle = "#000";
+                flakesPerDraw = Math.ceil(canvas.width * canvas.height / 800000.0);
                 canvasContext.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            function onWebkitTransitionEnd(event)
+            {
+                if (this.data === null)
+                    return;
+
+                canvasContext.save();
+                canvasContext.translate(this.width / 2 + this.data.elementX + this.data.offsetX,
+                                        this.height / 2 + this.data.elementY + this.data.offsetY);
+                canvasContext.rotate(this.data.rotate * Math.PI/180);
+                canvasContext.translate(-this.width / 2, -this.height / 2);
+                graphics_draw(canvasContext, this.element.id);
+                canvasContext.restore();
+
+                var spriteStyle = this.style;
+                spriteStyle.webkitTransform = '';
+                spriteStyle.webkitTransitionDuration = '';
+                spriteStyle.opacity = 0;
+                this.data = null;
+            }
+
+            function createSprites()
+            {
+                canvas = document.getElementById('canvas');
+                for (var i in graphics_elements) {
+                    var element = graphics_elements[i];
+                    elements.push(element.id);
+                    var sprites = [];
+                    for (var j = 0; j < spritesPerElement; ++j) {
+                        var sprite = null;
+                        if (j == 0) {
+                            sprite = document.createElement("canvas");
+                            sprite.width = Math.ceil(element.bounds.width);
+                            sprite.height = Math.ceil(element.bounds.height);
+                            var context = sprite.getContext('2d');
+                            graphics_draw(context, element.id);
+                        } else {
+                            sprite = sprites[0].cloneNode(false);
+                            var context = sprite.getContext('2d');
+                            context.drawImage(sprites[0], 0, 0);
+                        }
+                        sprite.element = element;
+                        var spriteStyle = sprite.style;
+                        spriteStyle.position = 'absolute';
+                        spriteStyle.opacity = 0;
+                        spriteStyle.webkitTransitionProperty = '-webkit-transform, opacity';
+                        document.body.appendChild(sprite);
+                        sprite.addEventListener('webkitTransitionEnd', onWebkitTransitionEnd, false);
+                        sprites.push(sprite);
+                    }
+                    element.sprites = sprites;
+                }
             }
 
             window.onload = function()
             {
                 canvas = document.getElementById('canvas');
+                createSprites();
                 canvasContext = canvas.getContext('2d');
                 fitToWindow();
-                canvas.addEventListener('mousemove', onMouseMove, false);
-                canvas.addEventListener('mousedown', onMouseDown, false);
-                canvas.addEventListener('mouseup', onMouseUp, false);
-                canvas.addEventListener('mouseout', onMouseUp, false);
-                draw();
+                document.body.addEventListener('mousemove', onMouseMove, false);
+                document.body.addEventListener('mousedown', onMouseDown, false);
+                document.body.addEventListener('mouseup', onMouseUp, false);
+                setInterval(drawFlakes, 20);
             }
 
             window.onresize = function()
