@@ -14,8 +14,7 @@
             var mouseY = 0;
             var canvas = null;
             var canvasContext = null;
-            var cover = null;
-            var spritesPerElement = 2;
+            var spritesPerElement = 3;
             var elements = [];
             var flakesPerDraw = 0;
             var emitSpriteInterval = null;
@@ -95,8 +94,6 @@
                 canvasContext.fillStyle = "#000";
                 flakesPerDraw = Math.ceil(canvas.width * canvas.height / 800000.0);
                 canvasContext.fillRect(0, 0, canvas.width, canvas.height);
-                cover.style.width = window.innerWidth + 'px';
-                cover.style.height = window.innerHeight + 'px';
             }
 
             function onWebkitTransitionEnd(event)
@@ -121,8 +118,7 @@
 
             function createSprites()
             {
-                var spriteCanvas = document.createElement("canvas");
-                var spriteCanvasContext = spriteCanvas.getContext('2d');
+                canvas = document.getElementById('canvas');
                 for (var i in graphics_elements) {
                     var element = graphics_elements[i];
                     elements.push(element.id);
@@ -130,13 +126,15 @@
                     for (var j = 0; j < spritesPerElement; ++j) {
                         var sprite = null;
                         if (j == 0) {
-                            spriteCanvas.height = Math.ceil(element.bounds.height);
-                            spriteCanvas.width = Math.ceil(element.bounds.width);
-                            graphics_draw(spriteCanvasContext, element.id);
-                            sprite = document.createElement("img");
-                            sprite.src = spriteCanvas.toDataURL();
+                            sprite = document.createElement("canvas");
+                            sprite.width = Math.ceil(element.bounds.width);
+                            sprite.height = Math.ceil(element.bounds.height);
+                            var context = sprite.getContext('2d');
+                            graphics_draw(context, element.id);
                         } else {
-                            sprite = sprites[0].cloneNode(true);
+                            sprite = sprites[0].cloneNode(false);
+                            var context = sprite.getContext('2d');
+                            context.drawImage(sprites[0], 0, 0);
                         }
                         sprite.element = element;
                         var spriteStyle = sprite.style;
@@ -149,29 +147,17 @@
                     }
                     element.sprites = sprites;
                 }
-                document.body.appendChild(spriteCanvas);
-                document.body.removeChild(spriteCanvas);
             }
 
             window.onload = function()
             {
+                canvas = document.getElementById('canvas');
+                createSprites();
+                canvasContext = canvas.getContext('2d');
+                fitToWindow();
                 document.body.addEventListener('mousemove', onMouseMove, false);
                 document.body.addEventListener('mousedown', onMouseDown, false);
                 document.body.addEventListener('mouseup', onMouseUp, false);
-
-                canvas = document.getElementById('canvas');
-                canvasContext = canvas.getContext('2d');
-
-                cover = document.createElement("div");
-                document.body.appendChild(cover);
-                var coverStyle = cover.style;
-                coverStyle.position = 'absolute';
-                coverStyle.top = 0;
-                coverStyle.left = 0;
-                coverStyle.zIndex = 99999999;
-
-                fitToWindow();
-                createSprites();
                 setInterval(drawFlakes, 20);
             }
 
