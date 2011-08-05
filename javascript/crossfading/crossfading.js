@@ -27,7 +27,7 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/*global window:true Int32Array:true */
+/*global window:true Int16Array:true */
 
 function Crossfader(canvas, image1, image2) {
 
@@ -95,9 +95,9 @@ function Crossfader(canvas, image1, image2) {
         return (1000 * frames / (Date.now() - timestamp));
     }
 
-    if (typeof Int32Array !== 'undefined') {
-        offset = new Int32Array(len);
-        delta = new Int32Array(len);
+    if (typeof Int16Array !== 'undefined') {
+        offset = new Int16Array(len);
+        delta = new Int16Array(len);
     }
 
     init();
