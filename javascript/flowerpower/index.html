@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+    <head>
+        <title>Flower Power</title>
+        <meta name="author" content="Alessandro Portale" />
+        <meta name="description" content="Spread flowers on the grass and don't let the bugs take over." />
+        <meta name="keywords" content="flowers, bugs, interactive" />
+        <style type="text/css">
+            body { margin: 0; overflow: hidden; }
+        </style>
+        <script type="text/javascript" src="grass.js"></script>
+        <script type="text/javascript" src="flowers.js"></script>
+        <script type="text/javascript" src="bugs.js"></script>
+        <script type="text/javascript">
+            var mouseX = 0;
+            var mouseY = 0;
+            var canvas = null;
+            var canvasContext = null;
+            var spritesPerElement = 3;
+            var elements = [];
+            var emitSpriteInterval = null;
+            var emitCount = 0;
+            var bugCount = 0;
+            var bugs = [];
+            var spriteSizeFactor = 0.65; // Save some GPU memory
+
+            function onMouseMove(event)
+            {
+                mouseX = event.clientX;
+                mouseY = event.clientY;
+            }
+
+            function onMouseDown(event)
+            {
+                mouseX = event.clientX;
+                mouseY = event.clientY;
+                emitElementSprite();
+            }
+
+            function onMouseUp(event)
+            {
+                window.clearInterval(emitSpriteInterval);
+                emitSpriteInterval = null;
+            }
+
+            function emitElementSprite()
+            {
+                var elementIndex = emitCount % elements.length;
+                var spriteIndex = Math.floor(emitCount / elements.length) % spritesPerElement;
+                emitCount++;
+                var trailDistance = Math.random() * 50 + 70;
+                var trailAngle = Math.random() * 360;
+                var rotate = Math.random() * 180;
+                var elementX = Math.round(Math.cos(trailAngle) * trailDistance);
+                var elementY = Math.round(Math.sin(trailAngle) * trailDistance);
+                var sprite = flowers_elements[elements[elementIndex]].sprites[spriteIndex];
+                var spriteStyle = sprite.style;
+                var offsetX = Math.round(mouseX - sprite.width / 2);
+                var offsetY = Math.round(mouseY - sprite.height / 2);
+                spriteStyle.left = offsetX + 'px';
+                spriteStyle.top = offsetY + 'px';
+                spriteStyle.webkitTransform = 'translate(' + elementX + 'px, ' + elementY + 'px) scale(' + (1 / spriteSizeFactor) + ') rotate(' + rotate + 'deg)';
+                spriteStyle.webkitTransitionDuration = '0.7s';
+                spriteStyle.opacity = 1;
+                spriteStyle.zIndex = emitCount;
+                sprite.data = { elementX: elementX, offsetX: offsetX, elementY: elementY, offsetY: offsetY, rotate: rotate };
+                if (emitSpriteInterval == null)
+                    emitSpriteInterval = window.setInterval(emitElementSprite, 80);
+            }
+
+            function drawBug()
+            {
+                var bugIndex = bugCount % bugs.length;
+                bugCount++;
+                var bug = bugs[bugIndex];
+                canvasContext.save();
+                canvasContext.translate(bug.bounds.width / 2 + Math.random() * canvas.width, bug.bounds.height / 2 + Math.random() * canvas.height);
+                canvasContext.rotate(Math.random() * 360 * Math.PI/180);
+                canvasContext.translate(-bug.bounds.width / 2, -bug.bounds.height / 2);
+                bugs_draw(canvasContext, bug.id);
+                canvasContext.restore();
+            }
+
+            function initializeGrass()
+            {
+                canvas.height = window.innerHeight;
+                canvas.width = window.innerWidth;
+                canvasContext.fillStyle = 'rgb(0, 256, 0)';
+                canvasContext.fillRect(0, 0, canvas.width, canvas.height);
+                var grassElement = grass_elements['grass'];
+                var verticalOverlap = 0.7;
+                var columns = Math.ceil(canvas.width / (grassElement.bounds.width * 0.8)) + 2;
+                var rows = Math.ceil(canvas.height / (grassElement.bounds.height * (1 - verticalOverlap))) + 3;
+                for (var row = 0; row < rows; row++) {
+                    var rotation = (-20 / rows) * row;
+                    for (var column = 0; column < columns; column++) {
+                        var x = (column - 1) * grassElement.bounds.width * 0.7;
+                        x += grassElement.bounds.width * (1.3 - Math.random() * 0.3);
+                        var y = (row - 1) * grassElement.bounds.height * (1 - verticalOverlap);
+                        y += grassElement.bounds.height * (1 - verticalOverlap) * (1.3 - Math.random() * 0.3);
+                        canvasContext.save();
+                        canvasContext.translate(x, y);
+                        canvasContext.rotate((rotation + 5 - Math.random() * 10) * Math.PI / 180);
+                        canvasContext.translate(-grassElement.bounds.width / 2, -grassElement.bounds.height);
+                        grass_draw(canvasContext, grassElement.id);
+                        canvasContext.restore();
+                    }
+                }
+            }
+
+            function onWebkitTransitionEnd(event)
+            {
+                if (this.data === null)
+                    return;
+
+                canvasContext.save();
+                canvasContext.translate(this.width / 2 + this.data.elementX + this.data.offsetX,
+                                        this.height / 2 + this.data.elementY + this.data.offsetY);
+                canvasContext.rotate(this.data.rotate * Math.PI/180);
+                canvasContext.translate(-this.width / 2 / spriteSizeFactor, -this.height / 2 / spriteSizeFactor);
+                flowers_draw(canvasContext, this.element.id);
+                canvasContext.restore();
+
+                var spriteStyle = this.style;
+                spriteStyle.webkitTransform = '';
+                spriteStyle.webkitTransitionDuration = '';
+                spriteStyle.opacity = 0;
+                this.data = null;
+            }
+
+            function createSprites()
+            {
+                canvas = document.getElementById('canvas');
+                for (var i in flowers_elements) {
+                    var element = flowers_elements[i];
+                    elements.push(element.id);
+                    var sprites = [];
+                    for (var j = 0; j < spritesPerElement; ++j) {
+                        var sprite = null;
+                        if (j == 0) {
+                            sprite = document.createElement("canvas");
+                            sprite.width = Math.ceil(element.bounds.width * spriteSizeFactor);
+                            sprite.height = Math.ceil(element.bounds.height * spriteSizeFactor);
+                            var context = sprite.getContext('2d');
+                            context.scale(spriteSizeFactor, spriteSizeFactor);
+                            flowers_draw(context, element.id);
+                        } else {
+                            sprite = sprites[0].cloneNode(false);
+                            var context = sprite.getContext('2d');
+                            context.drawImage(sprites[0], 0, 0);
+                        }
+                        sprite.element = element;
+                        var spriteStyle = sprite.style;
+                        spriteStyle.position = 'absolute';
+                        spriteStyle.opacity = 0;
+                        spriteStyle.webkitTransitionProperty = '-webkit-transform, opacity';
+                        document.body.appendChild(sprite);
+                        sprite.addEventListener('webkitTransitionEnd', onWebkitTransitionEnd, false);
+                        sprites.push(sprite);
+                    }
+                    element.sprites = sprites;
+                }
+            }
+
+            window.onload = function()
+            {
+                canvas = document.getElementById('canvas');
+                createSprites();
+                canvasContext = canvas.getContext('2d');
+                initializeGrass();
+                document.body.addEventListener('mousemove', onMouseMove, false);
+                document.body.addEventListener('mousedown', onMouseDown, false);
+                document.body.addEventListener('mouseup', onMouseUp, false);
+                for (var i in bugs_elements)
+                    bugs.push(bugs_elements[i]);
+                setInterval(drawBug, 3000);
+            }
+
+            window.onresize = function()
+            {
+                initializeGrass();
+            }
+        </script>
+    </head>
+    <body>
+        <canvas id="canvas" width="10" height="10">
+            Your browser does not support HTML5 Canvas.
+        </canvas>
+    </body>
+</html>
