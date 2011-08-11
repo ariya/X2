@@ -174,7 +174,42 @@ function flowers_draw_001(c) // 'flower2'
     c.fill();
 }
 
-function flowers_draw_002(c) // 'flower3'
+function flowers_draw_002(c) // 'leaf1'
+{
+    c.beginPath();
+    c.moveTo(512.0, 295.7);
+    c.bezierCurveTo(497.1, 289.3, 491.1, 276.5, 486.7, 262.9);
+    c.bezierCurveTo(482.4, 249.2, 483.0, 233.7, 488.9, 220.3);
+    c.bezierCurveTo(494.7, 206.9, 503.0, 200.1, 518.8, 187.9);
+    c.bezierCurveTo(532.6, 200.3, 539.1, 209.7, 543.2, 223.3);
+    c.bezierCurveTo(547.3, 236.9, 547.9, 252.4, 542.3, 265.4);
+    c.bezierCurveTo(536.8, 278.4, 530.3, 290.3, 512.0, 295.7);
+    c.closePath();
+    c.fillStyle = 'rgb(27, 111, 27)';
+    c.fill();
+    c.beginPath();
+    c.moveTo(510.8, 302.2);
+    c.lineTo(510.1, 272.5);
+    c.bezierCurveTo(502.5, 268.7, 496.3, 262.4, 490.3, 255.9);
+    c.bezierCurveTo(496.6, 260.9, 502.6, 266.5, 509.9, 269.0);
+    c.bezierCurveTo(509.8, 258.1, 509.4, 248.8, 510.3, 233.4);
+    c.bezierCurveTo(502.8, 227.4, 499.3, 221.4, 496.2, 215.5);
+    c.bezierCurveTo(500.4, 221.1, 504.6, 226.8, 511.0, 230.2);
+    c.bezierCurveTo(512.4, 215.2, 515.3, 203.6, 518.3, 192.3);
+    c.bezierCurveTo(517.1, 205.1, 515.1, 218.3, 514.8, 230.6);
+    c.bezierCurveTo(521.6, 228.1, 527.3, 222.6, 533.1, 217.4);
+    c.bezierCurveTo(527.8, 223.8, 522.3, 229.9, 514.8, 233.6);
+    c.bezierCurveTo(513.2, 246.2, 513.8, 257.3, 513.7, 269.0);
+    c.bezierCurveTo(522.3, 267.5, 530.0, 261.1, 538.1, 256.8);
+    c.bezierCurveTo(530.3, 262.3, 523.7, 269.4, 513.9, 272.5);
+    c.lineTo(513.5, 302.5);
+    c.lineTo(510.8, 302.2);
+    c.closePath();
+    c.fillStyle = 'rgb(19, 76, 19)';
+    c.fill();
+}
+
+function flowers_draw_003(c) // 'flower3'
 {
     c.beginPath();
     c.moveTo(609.0, 48.7);
@@ -354,7 +389,7 @@ function flowers_draw_002(c) // 'flower3'
     c.fill();
 }
 
-function flowers_draw_003(c) // 'flower4'
+function flowers_draw_004(c) // 'flower4'
 {
     c.beginPath();
     c.moveTo(316.0, 213.4);
@@ -426,7 +461,42 @@ function flowers_draw_003(c) // 'flower4'
     c.fill();
 }
 
-function flowers_draw_004(c) // 'flower5'
+function flowers_draw_005(c) // 'leaf2'
+{
+    c.beginPath();
+    c.moveTo(632.5, 291.7);
+    c.bezierCurveTo(615.9, 286.2, 609.2, 275.2, 604.3, 263.5);
+    c.bezierCurveTo(599.5, 251.7, 600.2, 238.4, 606.7, 226.9);
+    c.bezierCurveTo(613.2, 215.4, 624.8, 212.4, 640.0, 199.1);
+    c.bezierCurveTo(652.0, 212.1, 662.7, 217.8, 667.3, 229.5);
+    c.bezierCurveTo(671.8, 241.1, 672.5, 254.4, 666.3, 265.6);
+    c.bezierCurveTo(660.1, 276.8, 652.8, 287.0, 632.5, 291.7);
+    c.closePath();
+    c.fillStyle = 'rgb(32, 130, 32)';
+    c.fill();
+    c.beginPath();
+    c.moveTo(631.1, 297.3);
+    c.lineTo(630.4, 271.8);
+    c.bezierCurveTo(621.9, 268.5, 615.0, 263.1, 608.3, 257.5);
+    c.bezierCurveTo(615.3, 261.8, 622.0, 266.6, 630.2, 268.7);
+    c.bezierCurveTo(630.1, 259.4, 629.6, 251.4, 630.6, 238.1);
+    c.bezierCurveTo(622.2, 233.0, 618.4, 227.9, 614.9, 222.8);
+    c.bezierCurveTo(619.6, 227.6, 624.2, 232.5, 631.3, 235.4);
+    c.bezierCurveTo(632.9, 222.5, 636.2, 212.6, 639.6, 202.9);
+    c.bezierCurveTo(638.2, 213.9, 635.9, 225.2, 635.6, 235.8);
+    c.bezierCurveTo(643.2, 233.6, 649.5, 228.9, 656.0, 224.4);
+    c.bezierCurveTo(650.1, 229.9, 643.9, 235.2, 635.6, 238.3);
+    c.bezierCurveTo(633.8, 249.2, 634.5, 258.7, 634.4, 268.7);
+    c.bezierCurveTo(644.0, 267.4, 652.6, 262.0, 661.6, 258.2);
+    c.bezierCurveTo(652.9, 263.0, 645.5, 269.1, 634.6, 271.8);
+    c.lineTo(634.2, 297.5);
+    c.lineTo(631.1, 297.3);
+    c.closePath();
+    c.fillStyle = 'rgb(18, 77, 18)';
+    c.fill();
+}
+
+function flowers_draw_006(c) // 'flower5'
 {
     c.beginPath();
     c.moveTo(422.1, 226.8);
@@ -519,9 +589,11 @@ function flowers_draw_004(c) // 'flower5'
 var flowers_elements = {
     'flower1': { id: 'flower1', bounds: { x: 242.5, y: 24.3, width: 80.6, height: 91.1 }, drawfunction: flowers_draw_000 },
     'flower2': { id: 'flower2', bounds: { x: 363.3, y: 39.1, width: 54.7, height: 60.1 }, drawfunction: flowers_draw_001 },
-    'flower3': { id: 'flower3', bounds: { x: 459.0, y: -14.6, width: 150.0, height: 148.8 }, drawfunction: flowers_draw_002 },
-    'flower4': { id: 'flower4', bounds: { x: 256.5, y: 158.1, width: 63.2, height: 69.5 }, drawfunction: flowers_draw_003 },
-    'flower5': { id: 'flower5', bounds: { x: 343.2, y: 153.8, width: 83.3, height: 92.5 }, drawfunction: flowers_draw_004 }
+    'leaf1': { id: 'leaf1', bounds: { x: 483.9, y: 187.9, width: 62.5, height: 114.6 }, drawfunction: flowers_draw_002 },
+    'flower3': { id: 'flower3', bounds: { x: 459.0, y: -14.6, width: 150.0, height: 148.8 }, drawfunction: flowers_draw_003 },
+    'flower4': { id: 'flower4', bounds: { x: 256.5, y: 158.1, width: 63.2, height: 69.5 }, drawfunction: flowers_draw_004 },
+    'leaf2': { id: 'leaf2', bounds: { x: 601.2, y: 199.1, width: 69.7, height: 98.4 }, drawfunction: flowers_draw_005 },
+    'flower5': { id: 'flower5', bounds: { x: 343.2, y: 153.8, width: 83.3, height: 92.5 }, drawfunction: flowers_draw_006 }
 };
 
 function flowers_draw(context, id, x, y, width, height)
