@@ -5,9 +5,11 @@
         <meta name="author" content="Alessandro Portale" />
         <meta name="description" content="Spread flowers on the grass and don't let the bugs take over." />
         <meta name="keywords" content="flowers, bugs, interactive" />
+        <meta name="viewport" content="initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable = no" />
         <style type="text/css">
             body { margin: 0; overflow: hidden; }
         </style>
+        <script type="text/javascript" src="modernizr.js"></script>
         <script type="text/javascript" src="grass.js"></script>
         <script type="text/javascript" src="flowers.js"></script>
         <script type="text/javascript" src="bugs.js"></script>
@@ -24,17 +26,41 @@
             var bugs = [];
             var spriteSizeFactor = 0.65; // Save some GPU memory
 
+            function moveEmission(x, y)
+            {
+                mouseX = x;
+                mouseY = y;
+            }
+
             function onMouseMove(event)
             {
-                mouseX = event.clientX;
-                mouseY = event.clientY;
+                moveEmission(event.clientX, event.clientY);
+            }
+
+            function onTouchMove(event)
+            {
+                event.preventDefault();
+                moveEmission(event.targetTouches[0].clientX, event.targetTouches[0].clientY);
+            }
+
+            function startEmission(x, y)
+            {
+                mouseX = x;
+                mouseY = y;
+                emitElementSprite();
             }
 
             function onMouseDown(event)
             {
-                mouseX = event.clientX;
-                mouseY = event.clientY;
-                emitElementSprite();
+                startEmission(event.clientX, event.clientY);
+            }
+
+            function onTouchStart(event)
+            {
+                event.preventDefault();
+                if (event.targetTouches.length != 1)
+                    return false;
+                startEmission(event.targetTouches[0].clientX, event.targetTouches[0].clientY);
             }
 
             function onMouseUp(event)
@@ -168,17 +194,21 @@
                 createSprites();
                 canvasContext = canvas.getContext('2d');
                 initializeGrass();
-                document.body.addEventListener('mousemove', onMouseMove, false);
-                document.body.addEventListener('mousedown', onMouseDown, false);
-                document.body.addEventListener('mouseup', onMouseUp, false);
+
+                if (Modernizr.touch){
+                    document.addEventListener( 'touchmove', onTouchMove, false);
+                    document.addEventListener( 'touchstart', onTouchStart, false);
+                    document.addEventListener( 'touchend', onMouseUp, false);
+                    document.addEventListener( 'gesturechange', function(e){e.preventDefault();}, false);
+                } else {
+                    document.body.addEventListener('mousemove', onMouseMove, false);
+                    document.body.addEventListener('mouseup', onMouseUp, false);
+                    document.body.addEventListener('mousedown', onMouseDown, false);
+                }
+
                 for (var i in bugs_elements)
                     bugs.push(bugs_elements[i]);
                 setInterval(drawBug, 3000);
-            }
-
-            window.onresize = function()
-            {
-                initializeGrass();
             }
         </script>
     </head>

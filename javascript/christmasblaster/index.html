@@ -5,9 +5,11 @@
         <meta name="author" content="Alessandro Portale" /> 
         <meta name="description" content="Spread Christmas decoration while the snow falls." /> 
         <meta name="keywords" content="christmas, decoration, interactive, snow" /> 
+        <meta name="viewport" content="initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable = no" />
         <style type="text/css">
             body { margin: 0; overflow: hidden; }
         </style>
+        <script type="text/javascript" src="modernizr.js"></script>
         <script type="text/javascript" src="graphics.js"></script>
         <script type="text/javascript">
             var mouseX = 0;
@@ -19,6 +21,7 @@
             var flakesPerDraw = 0;
             var emitSpriteInterval = null;
             var emitCount = 0;
+            var spriteSizeFactor = 0.65; // Save some GPU memory
 
             var flakes = [
                 { file: "flake1.png" },
@@ -31,17 +34,41 @@
                 flakes[i].image.src = flakes[i].file;
             }
 
+            function moveEmission(x, y)
+            {
+                mouseX = x;
+                mouseY = y;
+            }
+
             function onMouseMove(event)
             {
-                mouseX = event.clientX;
-                mouseY = event.clientY;
+                moveEmission(event.clientX, event.clientY);
+            }
+
+            function onTouchMove(event)
+            {
+                event.preventDefault();
+                moveEmission(event.targetTouches[0].clientX, event.targetTouches[0].clientY);
+            }
+
+            function startEmission(x, y)
+            {
+                mouseX = x;
+                mouseY = y;
+                emitElementSprite();
             }
 
             function onMouseDown(event)
             {
-                mouseX = event.clientX;
-                mouseY = event.clientY;
-                emitElementSprite();
+                startEmission(event.clientX, event.clientY);
+            }
+
+            function onTouchStart(event)
+            {
+                event.preventDefault();
+                if (event.targetTouches.length != 1)
+                    return false;
+                startEmission(event.targetTouches[0].clientX, event.targetTouches[0].clientY);
             }
 
             function onMouseUp(event)
@@ -57,7 +84,6 @@
                 emitCount++;
                 var trailDistance = Math.random() * 50 + 100;
                 var trailAngle = Math.random() * 360;
-                var scale = 1 + Math.random() * 0.5;
                 var rotate = Math.random() * 180;
                 var elementX = Math.round(Math.cos(trailAngle) * trailDistance);
                 var elementY = Math.round(Math.sin(trailAngle) * trailDistance);
@@ -67,14 +93,13 @@
                 var offsetY = Math.round(mouseY - sprite.height / 2);
                 spriteStyle.left = offsetX + 'px';
                 spriteStyle.top = offsetY + 'px';
-//                spriteStyle.webkitTransform = 'translate(' + elementX + 'px, ' + elementY + 'px) scale(' + scale + ') rotate(' + rotate + 'deg)';
-                spriteStyle.webkitTransform = 'translate(' + elementX + 'px, ' + elementY + 'px) rotate(' + rotate + 'deg)';
+                spriteStyle.webkitTransform = 'translate(' + elementX + 'px, ' + elementY + 'px) scale(' + (1 / spriteSizeFactor) + ') rotate(' + rotate + 'deg)';
                 spriteStyle.webkitTransitionDuration = '0.7s';
                 spriteStyle.opacity = 1;
                 spriteStyle.zIndex = emitCount;
-                sprite.data = { elementX: elementX, offsetX: offsetX, elementY: elementY, offsetY: offsetY, scale: scale, rotate: rotate };
+                sprite.data = { elementX: elementX, offsetX: offsetX, elementY: elementY, offsetY: offsetY, rotate: rotate };
                 if (emitSpriteInterval == null)
-                    emitSpriteInterval = window.setInterval('emitElementSprite();', 50);
+                    emitSpriteInterval = window.setInterval(emitElementSprite, 80);
             }
 
             function drawFlakes()
@@ -105,7 +130,7 @@
                 canvasContext.translate(this.width / 2 + this.data.elementX + this.data.offsetX,
                                         this.height / 2 + this.data.elementY + this.data.offsetY);
                 canvasContext.rotate(this.data.rotate * Math.PI/180);
-                canvasContext.translate(-this.width / 2, -this.height / 2);
+                canvasContext.translate(-this.width / 2 / spriteSizeFactor, -this.height / 2 / spriteSizeFactor);
                 graphics_draw(canvasContext, this.element.id);
                 canvasContext.restore();
 
@@ -127,9 +152,10 @@
                         var sprite = null;
                         if (j == 0) {
                             sprite = document.createElement("canvas");
-                            sprite.width = Math.ceil(element.bounds.width);
-                            sprite.height = Math.ceil(element.bounds.height);
+                            sprite.width = Math.ceil(element.bounds.width * spriteSizeFactor);
+                            sprite.height = Math.ceil(element.bounds.height * spriteSizeFactor);
                             var context = sprite.getContext('2d');
+                            context.scale(spriteSizeFactor, spriteSizeFactor);
                             graphics_draw(context, element.id);
                         } else {
                             sprite = sprites[0].cloneNode(false);
@@ -155,15 +181,19 @@
                 createSprites();
                 canvasContext = canvas.getContext('2d');
                 fitToWindow();
-                document.body.addEventListener('mousemove', onMouseMove, false);
-                document.body.addEventListener('mousedown', onMouseDown, false);
-                document.body.addEventListener('mouseup', onMouseUp, false);
-                setInterval(drawFlakes, 20);
-            }
 
-            window.onresize = function()
-            {
-                fitToWindow();
+                if (Modernizr.touch){
+                    document.addEventListener( 'touchmove', onTouchMove, false);
+                    document.addEventListener( 'touchstart', onTouchStart, false);
+                    document.addEventListener( 'touchend', onMouseUp, false);
+                    document.addEventListener( 'gesturechange', function(e){e.preventDefault();}, false);
+                } else {
+                    document.body.addEventListener('mousemove', onMouseMove, false);
+                    document.body.addEventListener('mouseup', onMouseUp, false);
+                    document.body.addEventListener('mousedown', onMouseDown, false);
+                }
+
+                setInterval(drawFlakes, 20);
             }
         </script>
     </head>
