@@ -74,14 +74,18 @@ Entry Crawler::search(const QString &path)
 
 QString displayedSize(int size)
 {
+    const qreal K = 1024;
+    const qreal M = K * K;
+    const qreal G = K * M;
+
     if (size > 1024 * 1024 * 1024) {
-        return QString::number(size / 1024 / 1024 / 1024) + "G";
+        return QString::number(size / G, 'f', 1) + "G";
     }
     if (size > 1024 * 1024) {
-        return QString::number(size / 1024 / 1024) + "M";
+        return QString::number(size / M, 'f', 1) + "M";
     }
     if (size > 1024) {
-        return QString::number(size / 1024) + "K";
+        return QString::number(size / K, 'f', 1) + "K";
     }
     return QString::number(size);
 }
