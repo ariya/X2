@@ -1,104 +1,181 @@
 <html manifest="index.manifest"><head><title>Kinetic</title>
 <link rel="apple-touch-icon" href="kinetic.png"/>
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=no; maximum-scale=1.0; target-densityDpi=device-dpi;">
+<meta name="apple-mobile-web-app-status-bar-style" content="white">
+<meta name="viewport" content="width=device-width initial-scale=1 user-scalable=no maximum-scale=1">
 <script src="KineticModel.js"></script>
+<script src="FlickList.js"></script>
 <script>
+/*jslint browser: true, sloppy: true, indent: 4 */
+/*global KineticModel: true, FlickList: true */
+
+function hideAddressBar() {
+    window.setTimeout(function () {
+        window.scrollTo(0, 1);
+
+        // Android workaround
+        window.setTimeout(function () {
+            if (window.scrollY <= 0) {
+                window.setTimeout(function () {
+                    window.scrollTo(0, 1);
+                }, 300);
+            }
+        }, 100);
+    }, 0);
+}
+
+function FrameRateMonitor(id) {
+    var el = document.getElementById(id),
+        style = el.style,
+        timer,
+        timestamp = Date.now(),
+        frameCount = 0,
+        frameLimit = 25,
+        frames = [],
+        elapses = [];
+
+    function show(str) {
+        var height = parseInt(window.getComputedStyle(el).height, 10);
+        if (window.scrollY > 0) {
+            height -= 1;
+        }
+        style.top = window.innerHeight - height;
+
+        el.textContent = str;
+        style.opacity = 1;
+
+        clearTimeout(timer);
+        timer = null;
+    }
+
+    function stop() {
+        frameCount = 0;
+        frameLimit = 25;
+        frames = [];
+        elapses = [];
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+            if (timer) {
+                style.opacity = 0;
+            }
+        }, 2604);
+    }
+
+    function update() {
+        var now, duration, frameRate, i;
+
+        frameCount += 1;
+        if (frameCount >= frameLimit) {
+            now = Date.now();
+            duration = now - timestamp;
+
+            frames.push(frameCount);
+            elapses.push(duration);
+
+
+            if (frames.length > 1) {
+                if (duration > 1000) {
+                    frameLimit = 10;
+                }
+                if (frames.length + 1 >= 10) {
+                    frames.shift();
+                    elapses.shift();
+                }
+
+                frameCount = 0;
+                duration = 0;
+                for (i = 1; i < frames.length; i += 1) {
+                    frameCount += frames[i];
+                    duration += elapses[i];
+                }
+                frameRate = Math.round(1000 * frameCount / (1 + duration));
+                show(Math.round(frameRate) + ' fps');
+            }
+
+            timestamp = now;
+            frameCount = 0;
+        }
+    }
+
+    return {
+        stop: stop,
+        update: update
+    };
+}
+
+function ScrollIndicator(id) {
+    var el = document.getElementById(id),
+        style,
+        offset,
+        span,
+        updater;
+
+    style = window.getComputedStyle(document.getElementById('header'));
+    offset = 2 + parseInt(style.height, 10) + parseInt(style.paddingTop, 10) + parseInt(style.paddingBottom, 10);
+    span = window.innerHeight - parseInt(window.getComputedStyle(el).height, 10) - offset - 4;
+    style = el.style;
+
+    function show(index) {
+        var y = Math.round(index * span + offset);
+        style.webkitTransform = 'translate3d(0, ' + y + 'px, 0)';
+        style.opacity = 1;
+    }
+
+    function hide() {
+        style.opacity = 0;
+    }
+
+    return {
+        show: show,
+        hide: hide
+    };
+}
+
 window.addEventListener("load", function () {
+
+    hideAddressBar();
+
     window.setTimeout(function () {
 
-        var pressed = false, refPos = 0, offset = 0, el, maxofs, vertical;
+        var list = new FlickList('text'),
+            indicator = new ScrollIndicator('indicator'),
+            monitor = new FrameRateMonitor('statusbar'),
+            positionUpdater;
 
-        el = document.getElementById('container');
-        maxofs = window.getComputedStyle(el).height.replace('px', '');
-        maxofs -= window.innerHeight;
+        list.adjustRange();
+        indicator.max = list.scroller.getRange().maximum;
 
-        vertical = new KineticModel(0, maxofs, function (y) {
-            var s = window.document.getElementById('container').style;
-            s.webkitTransform = s.MozTransform = s.OTransform = 'translateY(-' + Math.floor(y) + 'px)';
-            offset = y;
+        list.scroller.onScrollStopped = function () {
+            monitor.stop();
+            indicator.hide();
+        };
+
+        positionUpdater = list.scroller.onPositionChanged;
+        list.scroller.onPositionChanged = function (pos) {
+            positionUpdater(pos);
+            indicator.show(pos / indicator.max);
+            monitor.update();
+        };
+
+        // Ignore touching other elements.
+        ['header', 'statusbar', 'indicator'].forEach(function (id) {
+            document.getElementById(id).addEventListener('touchstart', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            });
         });
 
-        if ('ontouchstart' in window) {
-
-            el.addEventListener('touchstart', function (e) {
-                if (e.targetTouches.length >= 1) {
-                    refPos = e.targetTouches[0].clientY;
-                    e.preventDefault();
-                    e.stopPropagation();
-                    vertical.resetSpeed();
-                    vertical.setPosition(offset);
-                }
-            }, false);
-
-            el.addEventListener('touchmove', function (e) {
-                if (e.targetTouches.length >= 1) {
-                    var delta = refPos - e.targetTouches[0].clientY;
-                    if (delta > 2 || delta < -2) {
-                        offset += delta;
-                        refPos = e.targetTouches[0].clientY;
-                    }
-                    vertical.setPosition(offset);
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            }, false);
-
-            el.addEventListener('touchend', function (e) {
-                vertical.release();
-                e.preventDefault();
-                e.stopPropagation();
-            }, false);
-
-        } else {
-
-            el.addEventListener('mousemove', function (e) {
-                if (pressed) {
-                    var delta = refPos - e.clientY;
-                    if (delta > 2 || delta < -2) {
-                        offset += delta;
-                        refPos = e.clientY;
-                    }
-                    vertical.setPosition(offset);
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            }, false);
-
-            el.addEventListener('mouseup', function (e) {
-                pressed = false;
-                vertical.release();
-                e.preventDefault();
-                e.stopPropagation();
-            }, false);
-
-            el.addEventListener('mousedown', function (e) {
-                pressed = true;
-                refPos = e.clientY;
-                e.preventDefault();
-                e.stopPropagation();
-                vertical.resetSpeed();
-            }, false);
-
-            document.querySelector('.app').style.height = '100%';
-            document.querySelector('.app').style.overflow = 'hidden';
-            el = document.getElementById('container');
-            vertical.maximum = window.getComputedStyle(el).height.replace('px', '') -
-                                   window.innerHeight;
+        // Fix the size of body, this gets rid of scroll bars (on desktop)
+        if (typeof window.ontouchstart === 'undefined') {
+            document.getElementById('wrapper').style.height = '100%';
+            list.adjustRange();
+            indicator.max = list.scroller.getRange().maximum;
         }
-
     }, 0);
-
 }, false);
 </script>
 <style>
-body {
-  margin: 0;
-  padding: 0;
-  font-family: Helvetica, Arial;
-}
-
 * {
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
@@ -106,31 +183,81 @@ body {
   -webkit-text-size-adjust: none;
 }
 
-.app {
-  -webkit-backface-visibility: hidden;
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
-.scroll {
-  padding: 0.8em;
-  -webkit-backface-visibility: hidden;
-  -webkit-transform: translateY(0);
+h3 {
+    padding-top: 1em;
+    font-family: serif;
+}
+
+#wrapper {
+    overflow: hidden;
+}
+
+#header {
+    z-index: 2;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #222;
+    color: #ddd;
+    text-align: center;
+    font-size: 1.3em;
+    padding: 0.3em 0 0.3em 0;
+    margin: 0;
+}
+
+#statusbar {
+    opacity: 0;
+    z-index: 3;
+    position: absolute;
+    right: 0;
+    background-color: green;
+    color: white;
+    font-size: 0.8em;
+    padding: 0px 10px 0px 10px;
+}
+
+#text {
+    z-index: 1;
+    padding: 0.8em;
+    -webkit-transform: translate3d(0, 0, 0);
+}
+
+#indicator {
+    opacity: 0;
+    z-index: 4;
+    position: absolute;
+    top: 0;
+    left: 4px;
+    width: 4px;
+    height: 50px;
+    background-color: #777;
+    -webkit-transition: opacity 700ms;
 }
 
 </style>
 </head>
 <body>
 
-<div class="app">
+<div id="wrapper">
 
-<div class="scroll" id="container">
+<div id="header">Frankenstein - Mary W. Shelley</div>
 
-<p style="text-align: center; padding: .5em; border: 1px #ccc solid">kinetic scrolling demo, by Ariya</p>
-<h1>Frankenstein</h1>
-<h2>Mary Wollstonecraft (Godwin) Shelley</h2>
+<div id="statusbar"></div>
+
+<div id="indicator"></div>
+
+<div id="text">
 
 <h3>Letter 1</h3>
 
-<p>St. Petersburgh, Dec. 11th, 17&mdash;</p>
+<p>St. Petersburgh, Dec. 11th, 17--</p>
 
 <p>TO Mrs. Saville, England</p>
 
@@ -153,8 +280,8 @@ and vivid.  I try in vain to be persuaded that the pole is the seat of
 frost and desolation; it ever presents itself to my imagination as the
 region of beauty and delight.  There, Margaret, the sun is forever
 visible, its broad disk just skirting the horizon and diffusing a
-perpetual splendour.  There&mdash;for with your leave, my sister, I will put
-some trust in preceding navigators&mdash;there snow and frost are banished;
+perpetual splendour.  There -- for with your leave, my sister, I will put
+some trust in preceding navigators -- there snow and frost are banished;
 and, sailing over a calm sea, we may be wafted to a land surpassing in
 wonders and in beauty every region hitherto discovered on the habitable
 globe.  Its productions and features may be without example, as the
@@ -181,7 +308,7 @@ all possible, can only be effected by an undertaking such as mine.
 These reflections have dispelled the agitation with which I began my
 letter, and I feel my heart glow with an enthusiasm which elevates me
 to heaven, for nothing contributes so much to tranquillize the mind as
-a steady purpose&mdash;a point on which the soul may fix its intellectual
+a steady purpose -- a point on which the soul may fix its intellectual
 eye.  This expedition has been the favourite dream of my early years. I
 have read with ardour the accounts of the various voyages which have
 been made in the prospect of arriving at the North Pacific Ocean
@@ -234,7 +361,7 @@ when theirs are failing.
 This is the most favourable period for travelling in Russia.  They fly
 quickly over the snow in their sledges; the motion is pleasant, and, in
 my opinion, far more agreeable than that of an English stagecoach.  The
-cold is not excessive, if you are wrapped in furs&mdash;a dress which I have
+cold is not excessive, if you are wrapped in furs -- a dress which I have
 already adopted, for there is a great difference between walking the
 deck and remaining seated motionless for hours, when no exercise
 prevents the blood from actually freezing in your veins.  I have no
@@ -252,13 +379,12 @@ you, and save me, that I may again and again testify my gratitude for
 all your love and kindness.
 </p>
 
-<p>Your affectionate brother,
-&nbsp;&nbsp;&nbsp;&nbsp;R. Walton
+<p>Your affectionate brother, R. Walton
 </p>
 
 <h3>Letter 2</h3>
 
-<p>Archangel, 28th March, 17&mdash;</p>
+<p>Archangel, 28th March, 17--</p>
 <p>To Mrs. Saville, England</p>
 
 <p>
@@ -367,8 +493,8 @@ will disclose a secret.  I have often attributed my attachment to, my
 passionate enthusiasm for, the dangerous mysteries of ocean to that
 production of the most imaginative of modern poets.  There is something
 at work in my soul which I do not understand.  I am practically
-industrious&mdash;painstaking, a workman to execute with perseverance and
-labour&mdash;but besides this there is a love for the marvellous, a belief
+industrious -- painstaking, a workman to execute with perseverance and
+labour -- but besides this there is a love for the marvellous, a belief
 in the marvellous, intertwined in all my projects, which hurries me out
 of the common pathways of men, even to the wild sea and unvisited
 regions I am about to explore. But to return to dearer considerations.
@@ -389,7 +515,7 @@ Your affectionate brother,
 <h3>Letter 3</h3>
 
 <p>
-July 7th, 17&mdash;
+July 7th, 17--
 
 To Mrs. Saville, England
 </p>
@@ -399,7 +525,7 @@ My dear Sister,
 </p>
 
 <p>
-I write a few lines in haste to say that I am safe&mdash;and well advanced
+I write a few lines in haste to say that I am safe -- and well advanced
 on my voyage.  This letter will reach England by a merchantman now on
 its homeward voyage from Archangel; more fortunate than I, who may not
 see my native land, perhaps, for many years.  I am, however, in good
@@ -446,7 +572,7 @@ R.W.
 <h3>Letter 4</h3>
 
 <p>
-August 5th, 17&mdash;
+August 5th, 17--
 
 To Mrs. Saville, England
 </p>
@@ -627,7 +753,7 @@ should I have any fresh incidents to record.
 
 
 <p>
-August 13th, 17&mdash;
+August 13th, 17--
 </p>
 
 <p>
@@ -675,11 +801,11 @@ thirst for a more intimate sympathy with a fellow mind than had ever
 fallen to my lot, and expressed my conviction that a man could boast of
 little happiness who did not enjoy this blessing.  "I agree with you,"
 replied the stranger; "we are unfashioned creatures, but half made up,
-if one wiser, better, dearer than ourselves&mdash;such a friend ought to
-be&mdash;do not lend his aid to perfectionate our weak and faulty natures. I
+if one wiser, better, dearer than ourselves -- such a friend ought to
+be -- do not lend his aid to perfectionate our weak and faulty natures. I
 once had a friend, the most noble of human creatures, and am entitled,
 therefore, to judge respecting friendship.  You have hope, and the
-world before you, and have no cause for despair.  But I&mdash;I have lost
+world before you, and have no cause for despair.  But I -- I have lost
 everything and cannot begin life anew."
 </p>
 
@@ -714,7 +840,7 @@ voice whose varied intonations are soul-subduing music.
 </p>
 
 <p>
-August 19, 17&mdash;
+August 19, 17--
 </p>
 
 <p>
@@ -765,7 +891,7 @@ duties, to record, as nearly as possible in his own words, what he has
 related during the day.  If I should be engaged, I will at least make
 notes.  This manuscript will doubtless afford you the greatest
 pleasure; but to me, who know him, and who hear it from his own
-lips&mdash;with what interest and sympathy shall I read it in some future
+lips -- with what interest and sympathy shall I read it in some future
 day!  Even now, as I commence my task, his full-toned voice swells in
 my ears; his lustrous eyes dwell on me with all their melancholy
 sweetness; I see his thin hand raised in animation, while the
@@ -774,18 +900,14 @@ lineaments of his face are irradiated by the soul within.
 
 <p>
 Strange and harrowing must be his story, frightful the storm which
-embraced the gallant vessel on its course and wrecked it&mdash;thus!
+embraced the gallant vessel on its course and wrecked it -- thus!
 </p>
 
-</div>
+<h3>To be continued...</h3>
 
 </div>
 
-<script>
-window.setTimeout(function () {
-    window.scrollTo(0, 1);
-}, 500);
-</script>
+</div>
 
 </body>
 </html>

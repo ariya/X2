@@ -1,6 +1,7 @@
 /*
   This file is part of the Ofi Labs X2 project.
 
+  Copyright (C) 2011 Ariya Hidayat <ariya.hidayat@gmail.com>
   Copyright (C) 2010 Ariya Hidayat <ariya.hidayat@gmail.com>
 
   Redistribution and use in source and binary forms, with or without
@@ -27,104 +28,108 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-var KineticModel = (function () {
+/*jslint browser: true, sloppy: true, indent: 4 */
 
-    KineticModel = function (min, max, handler)
-    {
-        this.minimum = min;
-        this.maximum = max;
-        this.duration = 3300;
-        this.position = 0;
-        this.updateInterval = 15;
+function KineticModel() {
 
-        this.state = {
-            ticker: null,
-            velocity: 0,
-            deacceleration: 0,
-            lastPosition: 0,
-            timestamp: Date.now(),
-            callback: handler,
-            releaseT: null,
-            thresholdV: 0,
-            slowdown: false
+    var min = 0,
+        max = 1000,
+        timeConstant,
+        ticker,
+        lastPosition = 0,
+        velocity = 0,
+        timestamp = Date.now();
+
+    function clamped(pos) {
+        return (pos > max) ? max : (pos < min) ? min : pos;
+    }
+
+    function nop() {}
+
+    this.duration = 2400;
+    this.position = 0;
+    this.updateInterval = 1000 / 60;
+
+    this.onPositionChanged = nop;
+    this.onScrollStarted = nop;
+    this.onScrollStopped = nop;
+
+
+    this.setRange = function (start, end) {
+        min = start;
+        max = end;
+    };
+
+    this.getRange = function () {
+        return {
+            minimum: min,
+            maximum: max
         };
     };
 
-    KineticModel.prototype = {
+    this.setPosition = function (pos) {
+        var self = this;
 
-        clamped: function (pos) {
-            return (pos > this.maximum) ? this.maximum :
-                (pos < this.minimum) ? this.minimum: pos;
-        },
+        this.position = clamped(pos);
+        this.onPositionChanged(this.position);
 
-        setPosition: function (pos) {
-            var self = this;
-            this.state.releaseT = null;
-            this.position = this.clamped(pos);
-            this.state.callback(this.position);
-            if (this.state.ticker === null) {
-                this.state.ticker = window.setInterval(function () {
-                    var s = self.state,
-                        elapsed = Date.now() - s.timestamp,
-                        v = (self.position - s.lastPosition) * 1000 / elapsed;
-                    if ((s.releaseT === null) && elapsed >= self.updateInterval) {
-                        s.timestamp = Date.now();
-                        if (v > 1 || v < -1) {
-                            s.velocity = 0.2 * (s.velocity) + 0.8 * v;
-                            s.lastPosition = self.position;
-                        }
+        if (!ticker) {
+            // Track down the movement to compute the initial
+            // scrolling velocity.
+            ticker = window.setInterval(function () {
+                var now = Date.now(),
+                    elapsed = now - timestamp,
+                    v = (self.position - lastPosition) * 1000 / elapsed;
+
+                // Moving average to filter the speed.
+                if (ticker && elapsed >= self.updateInterval) {
+                    timestamp = now;
+                    if (v > 1 || v < -1) {
+                        velocity = 0.2 * (velocity) + 0.8 * v;
+                        lastPosition = self.position;
                     }
-                }, this.updateInterval);
-            }
-        },
-
-        resetSpeed: function () {
-            var s = this.state;
-            s.releaseT = null;
-            s.velocity = 0;
-            s.lastPosition = this.position;
-            window.clearInterval(s.ticker);
-            s.ticker = null;
-        },
-
-        release: function () {
-            var s = this.state,
-                self = this;
-            window.clearInterval(s.ticker);
-            s.ticker = null;
-            if (s.velocity > 1 || s.velocity < -1) {
-                s.releaseT = Date.now();
-                s.timestamp = s.releaseT;
-                s.deacceleration = 3200 * s.velocity / this.duration;
-                s.thresholdV = Math.abs(0.33 * s.velocity);
-                s.slowdown = false;
-                window.clearInterval(s.ticker);
-                s.ticker = window.setInterval(function () {
-                    var s = self.state,
-                        now = Date.now(),
-                        elapsed = now - s.releaseT,
-                        delta = (now - s.timestamp) / 1000,
-                        vstep = s.deacceleration * delta,
-                        oldv = s.velocity;
-                    if (s.releaseT !== null) {
-                        s.timestamp = now;
-                        self.position = self.clamped(self.position + s.velocity * delta);
-                        if (!s.slowdown && (Math.abs(s.velocity) < s.thresholdV)) {
-                            s.slowdown = true;
-                            s.deacceleration /= 8;
-                            vstep = s.deacceleration * delta;
-                        }
-                        s.velocity = oldv - vstep;
-                        if ((s.velocity < 0 && oldv > 0) || (s.velocity > 0 && oldv < 0) || (elapsed > self.duration)) {
-                            self.resetSpeed();
-                        }
-                        s.callback(self.position);
-                    }
-                }, this.updateInterval);
-            }
+                }
+            }, this.updateInterval);
         }
     };
 
-    return KineticModel;
+    this.resetSpeed = function () {
+        velocity = 0;
+        lastPosition = this.position;
 
-}());
+        window.clearInterval(ticker);
+        ticker = null;
+    };
+
+    this.release = function () {
+        var self = this,
+            amplitude = velocity,
+            targetPosition = this.position + amplitude,
+            timeConstant = 1 + this.duration / 6,
+            timestamp = Date.now();
+
+        window.clearInterval(ticker);
+        ticker = null;
+
+        if (velocity > 1 || velocity < -1) {
+
+            this.onScrollStarted(self.position);
+
+            window.clearInterval(ticker);
+            ticker = window.setInterval(function () {
+                var elapsed = Date.now() - timestamp;
+
+                if (ticker) {
+                    self.position = targetPosition - amplitude * Math.exp(-elapsed / timeConstant);
+                    self.position = clamped(self.position);
+                    self.onPositionChanged(self.position);
+
+                    if (elapsed > self.duration) {
+                        self.resetSpeed();
+                        self.onScrollStopped(self.position);
+                    }
+                }
+            }, this.updateInterval);
+        }
+    };
+}
