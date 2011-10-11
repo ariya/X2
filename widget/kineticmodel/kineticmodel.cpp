@@ -32,34 +32,33 @@
 #include <QTimer>
 #include <QDateTime>
 
-static const int KineticModelDefaultUpdateInterval = 15; // ms
+#include <math.h>
 
 class KineticModelPrivate
 {
 public:
     QTimer ticker;
 
-    bool released;
     int duration;
     qreal position;
-    qreal velocity;
-    qreal deacceleration;
 
     QTime timestamp;
     qreal lastPosition;
+    qreal velocity;
+    bool released;
+    qreal targetPosition;
 
     KineticModelPrivate();
 };
 
 KineticModelPrivate::KineticModelPrivate()
-    : released(false)
-    , duration(1403)
+    : duration(2604)
     , position(0)
-    , velocity(0)
-    , deacceleration(0)
     , lastPosition(0)
+    , velocity(0)
+    , released(false)
+    , targetPosition(0)
 {
-
 }
 
 KineticModel::KineticModel(QObject *parent)
@@ -67,12 +66,11 @@ KineticModel::KineticModel(QObject *parent)
     , d_ptr(new KineticModelPrivate)
 {
     connect(&d_ptr->ticker, SIGNAL(timeout()), SLOT(update()));
-    d_ptr->ticker.setInterval(KineticModelDefaultUpdateInterval);
+    d_ptr->ticker.setInterval(1000 / 60); // default
 }
 
 KineticModel::~KineticModel()
 {
-
 }
 
 int KineticModel::duration() const
@@ -92,8 +90,6 @@ qreal KineticModel::position() const
 
 void KineticModel::setPosition(qreal pos)
 {
-    d_ptr->released = false;
-
     qreal oldPos = d_ptr->position;
     d_ptr->position = pos;
     if (!qFuzzyCompare(pos, oldPos))
@@ -129,13 +125,11 @@ void KineticModel::release()
 {
     Q_D(KineticModel);
 
+    d->targetPosition = d->position + d->velocity;
+    d->timestamp.start();
     d->released = true;
 
-    d->deacceleration = d->velocity * 1000 / (1 + d_ptr->duration);
-    if (d->deacceleration < 0)
-        d->deacceleration = -d->deacceleration;
-
-    if (d->deacceleration > 0.5) {
+    if (d->velocity > 10 || d->velocity < -10) {
         if (!d->ticker.isActive())
             d->ticker.start();
         update();
@@ -148,33 +142,27 @@ void KineticModel::update()
 {
     Q_D(KineticModel);
 
-    int elapsed = d->timestamp.elapsed();
-
-    // too fast gives less accuracy
-    if (elapsed < d->ticker.interval() / 2)
-        return;
-
-    qreal delta = static_cast<qreal>(elapsed) / 1000.0;
-
     if (d->released) {
-        d->position += (d->velocity * delta);
-        qreal vstep = d->deacceleration * delta;
-        if (d->velocity < vstep && d->velocity >= -vstep) {
+        qreal timeConstant = d->duration / 6;
+        qreal delta = d->velocity * ::exp(-d->timestamp.elapsed() / timeConstant);
+        d->position = d->targetPosition - delta;
+        if (d->timestamp.elapsed() > d->duration) {
             d->velocity = 0;
             d->ticker.stop();
-        } else {
-            if (d->velocity > 0)
-                d->velocity -= vstep;
-            else
-                d->velocity += vstep;
         }
         emit positionChanged(d->position);
     } else {
-        qreal lastSpeed = d->velocity;
-        qreal currentSpeed = (d->position - d->lastPosition) / delta;
-        d->velocity = .2 * lastSpeed + .8 * currentSpeed;
-        d->lastPosition = d->position;
-    }
+        int elapsed = d->timestamp.elapsed();
 
-    d->timestamp.start();
+        // too fast gives less accuracy
+        if (elapsed > d->ticker.interval() / 2) {
+            qreal delta = static_cast<qreal>(elapsed) / 1000.0;
+            d->timestamp.start();
+
+            qreal lastSpeed = d->velocity;
+            qreal currentSpeed = (d->position - d->lastPosition) / delta;
+            d->velocity = .2 * lastSpeed + .8 * currentSpeed;
+            d->lastPosition = d->position;
+        }
+    }
 }
