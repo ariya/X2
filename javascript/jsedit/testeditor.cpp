@@ -39,6 +39,11 @@ int main(int argc, char **argv)
     editor.setTabStopWidth(4);
     editor.resize(QApplication::desktop()->availableGeometry().size() / 2);
 
+    QStringList keywords = editor.keywords();
+    keywords << "const";
+    keywords << "let";
+    editor.setKeywords(keywords);
+
     // dark color scheme
     editor.setColor(JSEdit::Background,    QColor("#0C152B"));
     editor.setColor(JSEdit::Normal,        QColor("#FFFFFF"));

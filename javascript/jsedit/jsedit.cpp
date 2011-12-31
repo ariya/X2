@@ -1,6 +1,7 @@
 /*
   This file is part of the Ofi Labs X2 project.
 
+  Copyright (C) 2011 Ariya Hidayat <ariya.hidayat@gmail.com>
   Copyright (C) 2010 Ariya Hidayat <ariya.hidayat@gmail.com>
 
   Redistribution and use in source and binary forms, with or without
@@ -43,6 +44,9 @@ public:
     JSHighlighter(QTextDocument *parent = 0);
     void setColor(JSEdit::ColorComponent component, const QColor &color);
     void mark(const QString &str, Qt::CaseSensitivity caseSensitivity);
+
+    QStringList keywords() const;
+    void setKeywords(const QStringList &keywords);
 
 protected:
     void highlightBlock(const QString &text);
@@ -429,6 +433,17 @@ void JSHighlighter::mark(const QString &str, Qt::CaseSensitivity caseSensitivity
     rehighlight();
 }
 
+QStringList JSHighlighter::keywords() const
+{
+    return m_keywords.toList();
+}
+
+void JSHighlighter::setKeywords(const QStringList &keywords)
+{
+    m_keywords = QSet<QString>::fromList(keywords);
+    rehighlight();
+}
+
 struct BlockInfo {
     int position;
     int number;
@@ -709,6 +724,16 @@ void JSEdit::setColor(ColorComponent component, const QColor &color)
         d->highlighter->setColor(component, color);
         updateCursor();
     }
+}
+
+QStringList JSEdit::keywords() const
+{
+    return d_ptr->highlighter->keywords();
+}
+
+void JSEdit::setKeywords(const QStringList &keywords)
+{
+    d_ptr->highlighter->setKeywords(keywords);
 }
 
 bool JSEdit::isLineNumbersVisible() const

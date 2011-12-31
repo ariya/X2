@@ -1,6 +1,7 @@
 /*
   This file is part of the Ofi Labs X2 project.
 
+  Copyright (C) 2011 Ariya Hidayat <ariya.hidayat@gmail.com>
   Copyright (C) 2010 Ariya Hidayat <ariya.hidayat@gmail.com>
 
   Redistribution and use in source and binary forms, with or without
@@ -69,6 +70,9 @@ public:
     ~JSEdit();
 
     void setColor(ColorComponent component, const QColor &color);
+
+    QStringList keywords() const;
+    void setKeywords(const QStringList &keywords);
 
     bool isBracketsMatchingEnabled() const;
     bool isCodeFoldingEnabled() const;
