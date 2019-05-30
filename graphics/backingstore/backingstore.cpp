@@ -324,7 +324,7 @@ void GLTiger::updateBackingStore()
 
         // Find the closest tile to the center (using Manhattan distance)
         int updateX = dirtyTiles.at(0).x();
-        int updateY = dirtyTiles.at(0).x();
+        int updateY = dirtyTiles.at(0).y();
         qreal closestDistance = 1e6;
         for (int i = 0; i < dirtyTiles.count(); ++i) {
             int tx = dirtyTiles.at(i).x();
